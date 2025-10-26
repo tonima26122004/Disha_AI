@@ -16,17 +16,20 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useRole } from '../../context/RoleContext';
+import { useAlerts } from '../../hooks/useAlerts';
 import { getTranslation } from '../../utils/i18n';
 import RealTimeAlerts from '../../components/RealTimeAlerts';
 import WeatherReport from '../../components/WeatherReport';
+import Donations from '../../components/citizen/Donations';
 
 const CitizenDashboard = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const { currentRole, language, changeLanguage } = useRole();
+  const { alerts, refreshAlerts, isSyncing, createAlert } = useAlerts(language);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
-  const [isSyncing, setIsSyncing] = useState(false);
+  const [lastSyncTime, setLastSyncTime] = useState(null);
   const t = getTranslation(language);
 
   const handleLogout = () => {
@@ -34,10 +37,31 @@ const CitizenDashboard = () => {
   };
 
   const handleSync = async () => {
-    setIsSyncing(true);
-    // Simulate sync process
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    setIsSyncing(false);
+    await refreshAlerts();
+    setLastSyncTime(new Date());
+  };
+
+  const handleTestAlert = async () => {
+    try {
+      const testAlert = {
+        title: 'Test Alert from Citizen',
+        description: 'This is a test alert created from the citizen dashboard',
+        severity: 'medium',
+        location: 'Kolkata, West Bengal',
+        type: 'emergency',
+        disasterType: 'medical',
+        affectedArea: 'Test Area',
+        evacuationRequired: false,
+        estimatedDuration: '1-2 hours',
+        contactNumber: '1234567890',
+        additionalInfo: 'Test additional information'
+      };
+      
+      await createAlert(testAlert);
+      console.log('Test alert created successfully');
+    } catch (error) {
+      console.error('Failed to create test alert:', error);
+    }
   };
 
   // Monitor online status
@@ -53,6 +77,13 @@ const CitizenDashboard = () => {
       window.removeEventListener('offline', handleOffline);
     };
   }, []);
+
+  // Track when alerts change (for cross-tab sync detection)
+  useEffect(() => {
+    if (alerts.length > 0) {
+      console.log('Alerts updated in Citizen Dashboard:', alerts.length, 'alerts');
+    }
+  }, [alerts]);
 
   const navigation = [
     { name: t.dashboard, href: '/citizen', icon: Bell, current: true },
@@ -219,6 +250,14 @@ const CitizenDashboard = () => {
                   <span className="hidden sm:inline">{isSyncing ? t.syncing : t.sync}</span>
                 </button>
 
+                {/* Debug Info - Shows alerts count and sync status */}
+                <div className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                  <div>Alerts: {alerts.length}</div>
+                  {lastSyncTime && (
+                    <div>Last Sync: {lastSyncTime.toLocaleTimeString()}</div>
+                  )}
+                </div>
+
                 {/* Language Selector */}
                 <div className="flex items-center gap-1 sm:gap-2">
                   <Globe className="w-4 h-4 text-gray-500 hidden sm:block" />
@@ -277,7 +316,7 @@ const CitizenDashboard = () => {
                         className="w-full flex items-center gap-3 p-3 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
                       >
                         <Brain className="w-4 h-4 sm:w-5 sm:h-5" />
-                        <span className="font-medium text-sm sm:text-base">AI Assistant</span>
+                        <span className="font-medium text-sm sm:text-base">{t.aiAssistant}</span>
                       </button>
                       
                       <button
@@ -285,7 +324,7 @@ const CitizenDashboard = () => {
                         className="w-full flex items-center gap-3 p-3 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
                       >
                         <Shield className="w-4 h-4 sm:w-5 sm:h-5" />
-                        <span className="font-medium text-sm sm:text-base">Emergency Tools</span>
+                        <span className="font-medium text-sm sm:text-base">{t.emergencyTools}</span>
                       </button>
                       
                       <button
@@ -293,7 +332,16 @@ const CitizenDashboard = () => {
                         className="w-full flex items-center gap-3 p-3 bg-gray-600 text-white rounded-xl hover:bg-gray-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
                       >
                         <Settings className="w-4 h-4 sm:w-5 sm:h-5" />
-                        <span className="font-medium text-sm sm:text-base">Settings</span>
+                        <span className="font-medium text-sm sm:text-base">{t.settings}</span>
+                      </button>
+                      
+                      {/* Test Alert Button - Remove this in production */}
+                      <button
+                        onClick={handleTestAlert}
+                        className="w-full flex items-center gap-3 p-3 bg-yellow-600 text-white rounded-xl hover:bg-yellow-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+                      >
+                        <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
+                        <span className="font-medium text-sm sm:text-base">{t.testAlert}</span>
                       </button>
                     </div>
                   </div>
@@ -309,6 +357,16 @@ const CitizenDashboard = () => {
                   <div className="p-4 sm:p-6 lg:p-8">
                     <WeatherReport lang={language} />
                   </div>
+                </motion.div>
+
+                {/* Donations - Full Width Card */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="md:col-span-2 lg:col-span-12"
+                >
+                  <Donations lang={language} />
                 </motion.div>
               </div>
 

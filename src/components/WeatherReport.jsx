@@ -79,7 +79,7 @@ const WeatherReport = ({ lang = 'en' }) => {
     };
 
     loadWeatherData();
-  }, []);
+  }, [lang]); // Add lang as dependency to re-render when language changes
 
   const getWeatherIcon = (condition, icon) => {
     const iconMap = {
@@ -254,22 +254,22 @@ const WeatherReport = ({ lang = 'en' }) => {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
                 <div className="text-center bg-white rounded-xl p-3 sm:p-4 shadow-sm border border-gray-100">
                   <div className="text-2xl sm:text-3xl font-bold text-red-500 mb-1">{weatherData.today.high}°</div>
-                  <div className="text-xs sm:text-sm text-gray-600 font-medium">High Temperature</div>
+                  <div className="text-xs sm:text-sm text-gray-600 font-medium">{t.highTemperature}</div>
                 </div>
                 <div className="text-center bg-white rounded-xl p-3 sm:p-4 shadow-sm border border-gray-100">
                   <div className="text-2xl sm:text-3xl font-bold text-blue-500 mb-1">{weatherData.today.low}°</div>
-                  <div className="text-xs sm:text-sm text-gray-600 font-medium">Low Temperature</div>
+                  <div className="text-xs sm:text-sm text-gray-600 font-medium">{t.lowTemperature}</div>
                 </div>
                 <div className="text-center bg-white rounded-xl p-3 sm:p-4 shadow-sm border border-gray-100">
                   <div className="text-2xl sm:text-3xl font-bold text-green-500 mb-1">{weatherData.today.precipitation}%</div>
-                  <div className="text-xs sm:text-sm text-gray-600 font-medium">Rain Chance</div>
+                  <div className="text-xs sm:text-sm text-gray-600 font-medium">{t.rainChance}</div>
                 </div>
               </div>
             </div>
 
             {/* Hourly Forecast */}
             <div className="bg-white rounded-2xl p-4 sm:p-6 border border-gray-200 shadow-sm">
-              <h4 className="font-semibold text-gray-900 mb-4 sm:mb-6 text-base sm:text-lg">Hourly Forecast</h4>
+              <h4 className="font-semibold text-gray-900 mb-4 sm:mb-6 text-base sm:text-lg">{t.hourlyForecast}</h4>
               <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 sm:gap-4">
                 {weatherData.today.hourly.map((hour, index) => (
                   <motion.div
@@ -295,7 +295,7 @@ const WeatherReport = ({ lang = 'en' }) => {
         {selectedPeriod === 'past' && (
           <div className="space-y-4 sm:space-y-6">
             <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-2xl p-4 sm:p-6 border border-purple-200">
-              <h4 className="font-semibold text-gray-900 text-base sm:text-lg mb-4 sm:mb-6">Past 7 Days Weather</h4>
+              <h4 className="font-semibold text-gray-900 text-base sm:text-lg mb-4 sm:mb-6">{t.past7DaysWeather}</h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                 {weatherData.past7Days.map((day, index) => (
                   <motion.div
@@ -315,7 +315,7 @@ const WeatherReport = ({ lang = 'en' }) => {
                     </div>
                     <div className="flex-1">
                       <div className="font-medium text-gray-900 text-sm sm:text-base mb-1">{day.condition}</div>
-                      <div className="text-xs sm:text-sm text-gray-600 mb-3">{day.precipitation}mm rain</div>
+                      <div className="text-xs sm:text-sm text-gray-600 mb-3">{day.precipitation}{t.mmRain}</div>
                     </div>
                     <div className="flex items-center justify-between">
                       <div className="text-right">
@@ -338,7 +338,7 @@ const WeatherReport = ({ lang = 'en' }) => {
         {selectedPeriod === 'forecast' && (
           <div className="space-y-4 sm:space-y-6">
             <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-2xl p-4 sm:p-6 border border-green-200">
-              <h4 className="font-semibold text-gray-900 text-base sm:text-lg mb-4 sm:mb-6">7-Day Forecast</h4>
+              <h4 className="font-semibold text-gray-900 text-base sm:text-lg mb-4 sm:mb-6">{t.dayForecast}</h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                 {weatherData.forecast7Days.map((day, index) => (
                   <motion.div
@@ -358,7 +358,7 @@ const WeatherReport = ({ lang = 'en' }) => {
                     </div>
                     <div className="flex-1">
                       <div className="font-medium text-gray-900 text-sm sm:text-base mb-1">{day.condition}</div>
-                      <div className="text-xs sm:text-sm text-gray-600 mb-3">{day.precipitation}% rain chance</div>
+                      <div className="text-xs sm:text-sm text-gray-600 mb-3">{day.precipitation}% {t.rainChancePercent}</div>
                     </div>
                     <div className="flex items-center justify-between">
                       <div className="text-right">

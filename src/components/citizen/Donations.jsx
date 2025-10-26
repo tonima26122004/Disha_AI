@@ -2,10 +2,28 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Globe, ExternalLink } from 'lucide-react';
 import { getTranslation } from '../../utils/i18n';
-import { DONATION_LINKS } from '../../data/mockData';
 
 const Donations = ({ lang }) => {
   const t = getTranslation(lang);
+
+  // Create donation links with translated content
+  const donationLinks = [
+    {
+      name: t.pmCaresFund,
+      url: "https://www.pmcares.gov.in/",
+      description: t.pmCaresDescription
+    },
+    {
+      name: t.redCrossIndia,
+      url: "https://indianredcross.org/",
+      description: t.redCrossDescription
+    },
+    {
+      name: t.cmReliefFund,
+      url: "https://cmrelief.wb.gov.in/",
+      description: t.cmReliefDescription
+    }
+  ];
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200">
@@ -16,14 +34,14 @@ const Donations = ({ lang }) => {
           </div>
           <div>
             <h2 className="text-xl font-semibold text-gray-900">{t.donations}</h2>
-            <p className="text-sm text-gray-600">Support disaster relief efforts</p>
+            <p className="text-sm text-gray-600">{t.donationsSubtitle}</p>
           </div>
         </div>
       </div>
 
       <div className="p-6">
         <div className="grid gap-3">
-          {DONATION_LINKS.map((link, index) => (
+          {donationLinks.map((link, index) => (
             <motion.div
               key={link.url}
               initial={{ opacity: 0, x: -20 }}

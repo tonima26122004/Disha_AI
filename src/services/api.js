@@ -6,27 +6,72 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
 // Simulate network delay
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-// Mock data
-const mockAlerts = [
-  {
-    id: 1,
-    title: "Cyclone Warning",
-    message: "Heavy rainfall expected in coastal areas. Stay indoors.",
-    severity: "high",
-    region: "South 24 Parganas",
-    timestamp: new Date().toISOString(),
-    status: "active"
-  },
-  {
-    id: 2,
-    title: "Flood Alert",
-    message: "River levels rising. Evacuation recommended for low-lying areas.",
-    severity: "medium",
-    region: "Kolkata East",
-    timestamp: new Date(Date.now() - 3600000).toISOString(),
-    status: "active"
+// Mock data - Use localStorage for persistence across sessions
+let mockAlerts = [];
+
+// Load alerts from localStorage on module load
+const loadAlertsFromStorage = () => {
+  try {
+    const stored = localStorage.getItem('disha_alerts');
+    if (stored) {
+      mockAlerts = JSON.parse(stored);
+    } else {
+      // Default alerts if none exist
+      mockAlerts = [
+        {
+          id: 1,
+          title: "Flood Warning",
+          description: "Heavy rainfall expected in coastal areas",
+          severity: "high",
+          location: "Kolkata, West Bengal",
+          type: "weather",
+          timestamp: "2024-01-15 10:30:00",
+          status: "active"
+        },
+        {
+          id: 2,
+          title: "Traffic Alert",
+          description: "Major road closure due to construction",
+          severity: "medium",
+          location: "Mumbai, Maharashtra",
+          type: "traffic",
+          timestamp: "2024-01-15 09:15:00",
+          status: "active"
+        },
+        {
+          id: 3,
+          title: "Emergency Response",
+          description: "Medical emergency in downtown area",
+          severity: "critical",
+          location: "Delhi, Delhi",
+          type: "emergency",
+          timestamp: "2024-01-15 08:45:00",
+          status: "resolved"
+        }
+      ];
+      // Save to localStorage
+      localStorage.setItem('disha_alerts', JSON.stringify(mockAlerts));
+    }
+  } catch (error) {
+    console.error('Failed to load alerts from storage:', error);
+    // Fallback to default alerts
+    mockAlerts = [
+      {
+        id: 1,
+        title: "Flood Warning",
+        description: "Heavy rainfall expected in coastal areas",
+        severity: "high",
+        location: "Kolkata, West Bengal",
+        type: "weather",
+        timestamp: "2024-01-15 10:30:00",
+        status: "active"
+      }
+    ];
   }
-];
+};
+
+// Initialize on module load
+loadAlertsFromStorage();
 
 const mockUsers = [
   {
@@ -76,10 +121,12 @@ export const api = {
     const newAlert = {
       id: Date.now(),
       ...alertData,
-      timestamp: new Date().toISOString(),
+      timestamp: new Date().toISOString().slice(0, 19).replace('T', ' '),
       status: "active"
     };
     mockAlerts.unshift(newAlert);
+    // Save to localStorage
+    localStorage.setItem('disha_alerts', JSON.stringify(mockAlerts));
     return { success: true, data: newAlert };
   },
 
@@ -88,6 +135,8 @@ export const api = {
     const index = mockAlerts.findIndex(alert => alert.id === id);
     if (index !== -1) {
       mockAlerts[index] = { ...mockAlerts[index], ...updates };
+      // Save to localStorage
+      localStorage.setItem('disha_alerts', JSON.stringify(mockAlerts));
       return { success: true, data: mockAlerts[index] };
     }
     return { success: false, error: "Alert not found" };
@@ -98,6 +147,8 @@ export const api = {
     const index = mockAlerts.findIndex(alert => alert.id === id);
     if (index !== -1) {
       mockAlerts.splice(index, 1);
+      // Save to localStorage
+      localStorage.setItem('disha_alerts', JSON.stringify(mockAlerts));
       return { success: true };
     }
     return { success: false, error: "Alert not found" };

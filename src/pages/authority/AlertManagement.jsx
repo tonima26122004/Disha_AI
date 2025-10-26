@@ -13,115 +13,25 @@ import {
   Users,
   X,
   Menu,
-  Settings,
-  AlertTriangle,
-  Clock,
-  MapPin,
-  User
+  Settings
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useRole } from '../../context/RoleContext';
+import { useAlerts } from '../../hooks/useAlerts';
 import { getTranslation } from '../../utils/i18n';
+import AlertCreationModal from '../../components/AlertCreationModal';
+import AlertCard from '../../components/AlertCard';
 
 const AlertManagement = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuth();
   const { currentRole, language, changeLanguage } = useRole();
+  const { alerts, isSyncing, refreshAlerts } = useAlerts(language);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
-  const [isSyncing, setIsSyncing] = useState(false);
   const [showCreateAlert, setShowCreateAlert] = useState(false);
-  const [newAlert, setNewAlert] = useState({
-    title: '',
-    description: '',
-    severity: 'medium',
-    location: '',
-    type: 'emergency'
-  });
-  const [alerts, setAlerts] = useState([
-    {
-      id: 1,
-      title: 'Flood Warning',
-      description: 'Heavy rainfall expected in coastal areas',
-      severity: 'high',
-      location: 'Kolkata, West Bengal',
-      type: 'weather',
-      timestamp: '2024-01-15 10:30:00',
-      status: 'active'
-    },
-    {
-      id: 2,
-      title: 'Traffic Alert',
-      description: 'Major road closure due to construction',
-      severity: 'medium',
-      location: 'Mumbai, Maharashtra',
-      type: 'traffic',
-      timestamp: '2024-01-15 09:15:00',
-      status: 'active'
-    },
-    {
-      id: 3,
-      title: 'Emergency Response',
-      description: 'Medical emergency in downtown area',
-      severity: 'critical',
-      location: 'Delhi, Delhi',
-      type: 'emergency',
-      timestamp: '2024-01-15 08:45:00',
-      status: 'resolved'
-    }
-  ]);
   const t = getTranslation(language);
-
-  // Function to translate alert data
-  const translateAlertData = (alert) => {
-    const translations = {
-      title: {
-        "Flood Warning": t.floodWarning,
-        "Traffic Alert": t.trafficAlert,
-        "Emergency Response": t.emergencyResponse,
-      },
-      description: {
-        "Heavy rainfall expected in coastal areas": t.heavyRainfallExpectedInCoastalAreas,
-        "Major road closure due to construction": t.majorRoadClosureDueToConstruction,
-        "Medical emergency in downtown area": t.medicalEmergencyInDowntownArea,
-      },
-      location: {
-        "Kolkata, West Bengal": t.kolkataWestBengal,
-        "Mumbai, Maharashtra": t.mumbaiMaharashtra,
-        "Delhi, Delhi": t.delhiDelhi,
-      },
-      severity: {
-        "high": t.high,
-        "medium": t.medium,
-        "low": t.low,
-        "critical": t.critical,
-      },
-      status: {
-        "active": t.active,
-        "resolved": t.resolved,
-      },
-      type: {
-        "weather": t.weather,
-        "traffic": t.traffic,
-        "emergency": t.emergency,
-      }
-    };
-
-    return {
-      ...alert,
-      title: translations.title[alert.title] || alert.title,
-      description: translations.description[alert.description] || alert.description,
-      location: translations.location[alert.location] || alert.location,
-      severity: translations.severity[alert.severity] || alert.severity,
-      status: translations.status[alert.status] || alert.status,
-      type: translations.type[alert.type] || alert.type,
-    };
-  };
-
-  useEffect(() => {
-    loadAlerts();
-  }, []);
 
   // Monitor online status
   useEffect(() => {
@@ -138,27 +48,7 @@ const AlertManagement = () => {
   }, []);
 
   const handleSync = async () => {
-    setIsSyncing(true);
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    setIsSyncing(false);
-    loadAlerts();
-  };
-
-  const loadAlerts = async () => {
-    // Simulate loading alerts
-    console.log('Loading alerts...');
-  };
-
-  const handleCreateAlert = async () => {
-    const alert = {
-      id: alerts.length + 1,
-      ...newAlert,
-      timestamp: new Date().toISOString().slice(0, 19).replace('T', ' '),
-      status: 'active'
-    };
-    setAlerts([alert, ...alerts]);
-    setShowCreateAlert(false);
-    setNewAlert({ title: '', description: '', severity: 'medium', location: '', type: 'emergency' });
+    await refreshAlerts();
   };
 
   const handleLogout = () => {
@@ -368,52 +258,14 @@ const AlertManagement = () => {
                     <h3 className="text-lg font-medium text-gray-900">{t.activeAlerts} ({alerts.filter(a => a.status === 'active').length})</h3>
                   </div>
                   <div className="divide-y divide-gray-200">
-                    {alerts.map((alert) => {
-                      const translatedAlert = translateAlertData(alert);
-                      return (
-                        <div key={alert.id} className="p-6 hover:bg-gray-50">
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1">
-                              <div className="flex items-center space-x-3">
-                                <AlertTriangle className="h-5 w-5 text-red-500" />
-                                <h4 className="text-lg font-medium text-gray-900">{translatedAlert.title}</h4>
-                                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getSeverityColor(alert.severity)}`}>
-                                  {translatedAlert.severity}
-                                </span>
-                                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                                  alert.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                                }`}>
-                                  {translatedAlert.status}
-                                </span>
-                              </div>
-                              <p className="mt-2 text-sm text-gray-600">{translatedAlert.description}</p>
-                              <div className="mt-3 flex items-center space-x-4 text-sm text-gray-500">
-                                <div className="flex items-center">
-                                  <MapPin className="h-4 w-4 mr-1" />
-                                  {translatedAlert.location}
-                                </div>
-                                <div className="flex items-center">
-                                  <Clock className="h-4 w-4 mr-1" />
-                                  {alert.timestamp}
-                                </div>
-                                <div className="flex items-center">
-                                  <User className="h-4 w-4 mr-1" />
-                                  {translatedAlert.type}
-                                </div>
-                              </div>
-                            </div>
-                            <div className="flex space-x-2">
-                              <button className="text-blue-600 hover:text-blue-900 text-sm font-medium">
-                                {t.viewDetails}
-                              </button>
-                              <button className="text-green-600 hover:text-green-900 text-sm font-medium">
-                                {t.resolve}
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
+                    {alerts.map((alert) => (
+                      <AlertCard 
+                        key={alert.id} 
+                        alert={alert} 
+                        language={language}
+                        showActions={true}
+                      />
+                    ))}
                   </div>
                 </div>
               </div>
@@ -423,92 +275,11 @@ const AlertManagement = () => {
       </div>
 
       {/* Create Alert Modal */}
-      {showCreateAlert && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={() => setShowCreateAlert(false)}></div>
-            <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-              <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">{t.createNewAlert}</h3>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">{t.title}</label>
-                    <input
-                      type="text"
-                      value={newAlert.title}
-                      onChange={(e) => setNewAlert({...newAlert, title: e.target.value})}
-                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
-                      placeholder={t.enterAlertTitle}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">{t.description}</label>
-                    <textarea
-                      value={newAlert.description}
-                      onChange={(e) => setNewAlert({...newAlert, description: e.target.value})}
-                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
-                      rows={3}
-                      placeholder={t.enterAlertDescription}
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">{t.severity}</label>
-                      <select
-                        value={newAlert.severity}
-                        onChange={(e) => setNewAlert({...newAlert, severity: e.target.value})}
-                        className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
-                      >
-                        <option value="low">{t.low}</option>
-                        <option value="medium">{t.medium}</option>
-                        <option value="high">{t.high}</option>
-                        <option value="critical">{t.critical}</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">{t.type}</label>
-                      <select
-                        value={newAlert.type}
-                        onChange={(e) => setNewAlert({...newAlert, type: e.target.value})}
-                        className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
-                      >
-                        <option value="emergency">{t.emergency}</option>
-                        <option value="weather">{t.weather}</option>
-                        <option value="traffic">{t.traffic}</option>
-                        <option value="safety">{t.safety}</option>
-                      </select>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">{t.location}</label>
-                    <input
-                      type="text"
-                      value={newAlert.location}
-                      onChange={(e) => setNewAlert({...newAlert, location: e.target.value})}
-                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
-                      placeholder={t.enterLocation}
-                    />
-                  </div>
-                </div>
-              </div>
-              <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                <button
-                  onClick={handleCreateAlert}
-                  className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm"
-                >
-                  {t.createAlert}
-                </button>
-                <button
-                  onClick={() => setShowCreateAlert(false)}
-                  className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
-                >
-                  {t.cancel}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <AlertCreationModal 
+        isOpen={showCreateAlert}
+        onClose={() => setShowCreateAlert(false)}
+        language={language}
+      />
     </div>
   );
 };

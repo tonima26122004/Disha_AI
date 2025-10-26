@@ -20,53 +20,25 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useRole } from '../../context/RoleContext';
+import { useAlerts } from '../../hooks/useAlerts';
 import { getTranslation } from '../../utils/i18n';
 import api from '../../services/api';
+import AlertCreationModal from '../../components/AlertCreationModal';
+import AlertCard from '../../components/AlertCard';
 
 const AuthorityDashboard = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuth();
   const { currentRole, language, changeLanguage } = useRole();
+  const { alerts, isSyncing, refreshAlerts } = useAlerts(language);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
-  const [isSyncing, setIsSyncing] = useState(false);
+  const [showCreateAlert, setShowCreateAlert] = useState(false);
+  const [users, setUsers] = useState([]);
+  const [reports, setReports] = useState(null);
+  const [loading, setLoading] = useState(true);
   const t = getTranslation(language);
-
-  // Function to translate alert data
-  const translateAlertData = (alert) => {
-    const translations = {
-      title: {
-        "Cyclone Warning": t.cycloneWarning,
-        "Flood Alert": t.floodAlert,
-        "Heat Wave Alert": t.heatWaveAlert,
-      },
-      message: {
-        "Heavy rainfall expected in coastal areas. Stay indoors.": t.heavyRainfallExpectedInCoastalAreasStayIndoors,
-        "River levels rising. Evacuation recommended for low-lying areas.": t.riverLevelsRisingEvacuationRecommended,
-        "Temperatures expected to reach 42°C. Stay hydrated and avoid outdoor activities.": t.temperaturesExpectedToReach42CStayHydrated,
-      },
-      region: {
-        "South 24 Parganas": t.south24Parganas,
-        "Kolkata East": t.kolkataEast,
-        "West Bengal": t.westBengal,
-      },
-      severity: {
-        "high": t.high,
-        "medium": t.medium,
-        "low": t.low,
-        "critical": t.critical,
-      }
-    };
-
-    return {
-      ...alert,
-      title: translations.title[alert.title] || alert.title,
-      message: translations.message[alert.message] || alert.message,
-      region: translations.region[alert.region] || alert.region,
-      severity: translations.severity[alert.severity] || alert.severity,
-    };
-  };
 
   // Function to translate user data
   const translateUserData = (user) => {
@@ -84,17 +56,6 @@ const AuthorityDashboard = () => {
       name: translations.name[user.name] || user.name,
     };
   };
-  const [alerts, setAlerts] = useState([]);
-  const [users, setUsers] = useState([]);
-  const [reports, setReports] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [showCreateAlert, setShowCreateAlert] = useState(false);
-  const [newAlert, setNewAlert] = useState({
-    title: '',
-    message: '',
-    severity: 'medium',
-    region: ''
-  });
 
   useEffect(() => {
     loadData();
@@ -115,41 +76,22 @@ const AuthorityDashboard = () => {
   }, []);
 
   const handleSync = async () => {
-    setIsSyncing(true);
-    // Simulate sync process
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    setIsSyncing(false);
+    await refreshAlerts();
   };
 
   const loadData = async () => {
     try {
-      const [alertsResponse, usersResponse, reportsResponse] = await Promise.all([
-        api.getAlerts(),
+      const [usersResponse, reportsResponse] = await Promise.all([
         api.getTrackedUsers(),
         api.getReports()
       ]);
 
-      if (alertsResponse.success) setAlerts(alertsResponse.data);
       if (usersResponse.success) setUsers(usersResponse.data);
       if (reportsResponse.success) setReports(reportsResponse.data);
     } catch (error) {
       console.error('Failed to load data:', error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleCreateAlert = async (e) => {
-    e.preventDefault();
-    try {
-      const response = await api.createAlert(newAlert);
-      if (response.success) {
-        setAlerts([response.data, ...alerts]);
-        setNewAlert({ title: '', message: '', severity: 'medium', region: '' });
-        setShowCreateAlert(false);
-      }
-    } catch (error) {
-      console.error('Failed to create alert:', error);
     }
   };
 
@@ -427,47 +369,14 @@ const AuthorityDashboard = () => {
                     
                     {alerts.length > 0 ? (
                       <div className="space-y-4">
-                        {alerts.map((alert) => {
-                          const translatedAlert = translateAlertData(alert);
-                          return (
-                            <motion.div
-                              key={alert.id}
-                              initial={{ opacity: 0, y: 20 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              className="border border-gray-200 rounded-lg p-4"
-                            >
-                              <div className="flex items-start justify-between">
-                                <div className="flex-1">
-                                  <h4 className="text-sm font-medium text-gray-900">
-                                    {translatedAlert.title}
-                                  </h4>
-                                  <p className="mt-1 text-sm text-gray-600">
-                                    {translatedAlert.message}
-                                  </p>
-                                  <div className="mt-2 flex items-center text-xs text-gray-500">
-                                    <MapPin className="h-3 w-3 mr-1" />
-                                    {translatedAlert.region}
-                                    <span className="mx-2">•</span>
-                                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                      alert.severity === 'high' 
-                                        ? 'bg-red-100 text-red-800'
-                                        : alert.severity === 'medium'
-                                        ? 'bg-yellow-100 text-yellow-800'
-                                        : 'bg-green-100 text-green-800'
-                                    }`}>
-                                      {translatedAlert.severity}
-                                    </span>
-                                  </div>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <button className="text-gray-400 hover:text-gray-600">
-                                    <Settings className="h-4 w-4" />
-                                  </button>
-                                </div>
-                              </div>
-                            </motion.div>
-                          );
-                        })}
+                        {alerts.map((alert) => (
+                          <AlertCard 
+                            key={alert.id} 
+                            alert={alert} 
+                            language={language}
+                            showActions={false}
+                          />
+                        ))}
                       </div>
                     ) : (
                       <div className="text-center py-8">
@@ -588,95 +497,11 @@ const AuthorityDashboard = () => {
       </div>
 
       {/* Create Alert Modal */}
-      {showCreateAlert && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={() => setShowCreateAlert(false)} />
-            <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-              <form onSubmit={handleCreateAlert}>
-                <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                  <div className="sm:flex sm:items-start">
-                    <div className="w-full">
-                      <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
-                        {t.createNewAlert}
-                      </h3>
-                      <div className="space-y-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700">
-                            {t.title}
-                          </label>
-                          <input
-                            type="text"
-                            value={newAlert.title}
-                            onChange={(e) => setNewAlert({...newAlert, title: e.target.value})}
-                            className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
-                            required
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700">
-                            {t.message}
-                          </label>
-                          <textarea
-                            value={newAlert.message}
-                            onChange={(e) => setNewAlert({...newAlert, message: e.target.value})}
-                            className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
-                            rows={3}
-                            required
-                          />
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700">
-                              {t.severity}
-                            </label>
-                            <select
-                              value={newAlert.severity}
-                              onChange={(e) => setNewAlert({...newAlert, severity: e.target.value})}
-                              className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
-                            >
-                              <option value="low">{t.low}</option>
-                              <option value="medium">{t.medium}</option>
-                              <option value="high">{t.high}</option>
-                            </select>
-                          </div>
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700">
-                              {t.region}
-                            </label>
-                            <input
-                              type="text"
-                              value={newAlert.region}
-                              onChange={(e) => setNewAlert({...newAlert, region: e.target.value})}
-                              className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
-                              required
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                  <button
-                    type="submit"
-                    className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm"
-                  >
-                    Create Alert
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setShowCreateAlert(false)}
-                    className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
+      <AlertCreationModal 
+        isOpen={showCreateAlert}
+        onClose={() => setShowCreateAlert(false)}
+        language={language}
+      />
     </div>
   );
 };

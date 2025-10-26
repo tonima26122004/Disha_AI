@@ -12,66 +12,17 @@ import {
   XCircle
 } from 'lucide-react';
 import { getTranslation } from '../utils/i18n';
+import { useAlerts } from '../hooks/useAlerts';
 
 const RealTimeAlerts = ({ lang = 'en' }) => {
   const t = getTranslation(lang);
-  const [alerts, setAlerts] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const { alerts, translateAlertData, isSyncing, refreshAlerts } = useAlerts(lang);
   const [lastSync, setLastSync] = useState(null);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [syncStatus, setSyncStatus] = useState('idle'); // 'idle', 'syncing', 'success', 'error'
 
-  // Mock alert data - in real app, this would come from API
-  const mockAlerts = [
-    {
-      id: 1,
-      title: t.cycloneWarning,
-      description: t.heavyRainfallExpected,
-      region: "South 24 Parganas",
-      severity: "high",
-      timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
-      type: "weather",
-      status: "active",
-      source: "IMD Kolkata"
-    },
-    {
-      id: 2,
-      title: t.floodAlert,
-      description: t.riverLevelsRising,
-      region: "Kolkata East",
-      severity: "medium",
-      timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000), // 4 hours ago
-      type: "flood",
-      status: "active",
-      source: "Disaster Management"
-    },
-    {
-      id: 3,
-      title: t.heatWaveAdvisory,
-      description: t.temperatureExpected,
-      region: "Kolkata",
-      severity: "medium",
-      timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000), // 6 hours ago
-      type: "heat",
-      status: "active",
-      source: "Health Department"
-    },
-    {
-      id: 4,
-      title: t.trafficAdvisory,
-      description: t.roadClosure,
-      region: "Park Street",
-      severity: "low",
-      timestamp: new Date(Date.now() - 8 * 60 * 60 * 1000), // 8 hours ago
-      type: "traffic",
-      status: "active",
-      source: "Traffic Police"
-    }
-  ];
-
   useEffect(() => {
-    // Load initial alerts
-    setAlerts(mockAlerts);
+    // Set initial sync time
     setLastSync(new Date());
 
     // Monitor online status
@@ -93,30 +44,12 @@ const RealTimeAlerts = ({ lang = 'en' }) => {
       return;
     }
 
-    setLoading(true);
     setSyncStatus('syncing');
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Use the refreshAlerts function from context
+      await refreshAlerts();
       
-      // Simulate new alerts
-      const newAlerts = [
-        ...mockAlerts,
-        {
-          id: Date.now(),
-          title: "New Weather Update",
-          description: "Thunderstorm warning for next 3 hours.",
-          region: "Kolkata Metro",
-          severity: "medium",
-          timestamp: new Date(),
-          type: "weather",
-          status: "active",
-          source: "IMD Kolkata"
-        }
-      ];
-
-      setAlerts(newAlerts);
       setLastSync(new Date());
       setSyncStatus('success');
       
@@ -126,8 +59,6 @@ const RealTimeAlerts = ({ lang = 'en' }) => {
       console.error('Sync failed:', error);
       setSyncStatus('error');
       setTimeout(() => setSyncStatus('idle'), 3000);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -190,15 +121,15 @@ const RealTimeAlerts = ({ lang = 'en' }) => {
             {/* Sync Button */}
             <button
               onClick={syncAlerts}
-              disabled={loading || !isOnline}
+              disabled={isSyncing || !isOnline}
               className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg text-sm font-medium transition-colors w-full sm:w-auto justify-center ${
-                loading || !isOnline
+                isSyncing || !isOnline
                   ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                   : 'bg-blue-600 text-white hover:bg-blue-700'
               }`}
             >
-              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-              {loading ? 'Syncing...' : 'Sync'}
+              <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
+              {isSyncing ? 'Syncing...' : 'Sync'}
             </button>
           </div>
         </div>
@@ -208,7 +139,7 @@ const RealTimeAlerts = ({ lang = 'en' }) => {
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mt-4 p-3 rounded-lg flex items-center gap-2 rounded-lg"
+            className="mt-4 p-3 rounded-lg flex items-center gap-2"
           >
             {syncStatus === 'syncing' && (
               <div className="flex items-center gap-2 text-blue-600">
@@ -250,56 +181,59 @@ const RealTimeAlerts = ({ lang = 'en' }) => {
           </div>
         ) : (
           <div className="space-y-3 sm:space-y-4">
-            {alerts.map((alert, index) => (
-              <motion.div
-                key={alert.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                className="border border-gray-200 rounded-lg p-3 sm:p-4 hover:shadow-md transition-shadow"
-              >
-                <div className="flex items-start gap-3 sm:gap-4">
-                  <div className="flex-shrink-0 mt-1">
-                    {getSeverityIcon(alert.severity)}
-                  </div>
-                  
-                  <div className="flex-1 min-w-0">
-                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2 sm:gap-4">
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-semibold text-gray-900 mb-1 text-sm sm:text-base">
-                          {alert.title}
-                        </h4>
-                        <p className="text-sm text-gray-600 mb-3 line-clamp-2">
-                          {alert.description}
-                        </p>
-                      </div>
-                      
-                      <div className="flex items-center gap-2 flex-shrink-0">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getSeverityColor(alert.severity)}`}>
-                          {alert.severity}
-                        </span>
-                      </div>
+            {alerts.map((alert, index) => {
+              const translatedAlert = translateAlertData(alert);
+              return (
+                <motion.div
+                  key={alert.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  className="border border-gray-200 rounded-lg p-3 sm:p-4 hover:shadow-md transition-shadow"
+                >
+                  <div className="flex items-start gap-3 sm:gap-4">
+                    <div className="flex-shrink-0 mt-1">
+                      {getSeverityIcon(alert.severity)}
                     </div>
                     
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-gray-500">
-                      <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
-                        <div className="flex items-center gap-1">
-                          <MapPin className="w-3 h-3 flex-shrink-0" />
-                          <span className="truncate">{alert.region}</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2 sm:gap-4">
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-semibold text-gray-900 mb-1 text-sm sm:text-base">
+                            {translatedAlert.title}
+                          </h4>
+                          <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                            {translatedAlert.description}
+                          </p>
                         </div>
-                        <div className="flex items-center gap-1">
-                          <Clock className="w-3 h-3 flex-shrink-0" />
-                          <span>{formatTimeAgo(alert.timestamp)}</span>
+                        
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getSeverityColor(alert.severity)}`}>
+                            {translatedAlert.severity}
+                          </span>
                         </div>
                       </div>
-                      <div className="text-gray-400 text-xs sm:text-sm truncate">
-                        {alert.source}
+                      
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-gray-500">
+                        <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
+                          <div className="flex items-center gap-1">
+                            <MapPin className="w-3 h-3 flex-shrink-0" />
+                            <span className="truncate">{translatedAlert.location}</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Clock className="w-3 h-3 flex-shrink-0" />
+                            <span>{formatTimeAgo(new Date(alert.timestamp))}</span>
+                          </div>
+                        </div>
+                        <div className="text-gray-400 text-xs sm:text-sm truncate">
+                          {translatedAlert.type}
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              </motion.div>
-            ))}
+                </motion.div>
+              );
+            })}
           </div>
         )}
       </div>
