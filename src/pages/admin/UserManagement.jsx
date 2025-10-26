@@ -21,9 +21,9 @@ import {
   Filter,
   Download
 } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
-import { useRole } from '../context/RoleContext';
-import { getTranslation } from '../utils/i18n';
+import { useAuth } from '../../context/AuthContext';
+import { useRole } from '../../context/RoleContext';
+import { getTranslation } from '../../utils/i18n';
 
 const UserManagement = () => {
   const navigate = useNavigate();
@@ -83,6 +83,7 @@ const UserManagement = () => {
     { name: t.systemSettings, href: '/admin/settings', icon: Settings, current: false },
     { name: t.database, href: '/admin/database', icon: Database, current: false },
     { name: t.security, href: '/admin/security', icon: Lock, current: false },
+    { name: t.settings, href: '/admin/admin-settings', icon: Settings, current: false },
   ];
 
   const filteredUsers = users.filter(user => 
@@ -107,7 +108,7 @@ const UserManagement = () => {
           </div>
           <div className="flex-1 h-0 pt-5 pb-4 overflow-y-auto">
             <div className="flex-shrink-0 flex items-center px-4">
-              <Shield className="h-8 w-8 text-purple-600" />
+              <Shield className="h-8 w-8 text-indigo-600" />
               <span className="ml-2 text-xl font-bold text-gray-900">Disha AI</span>
             </div>
             <nav className="mt-5 px-2 space-y-1">
@@ -121,11 +122,11 @@ const UserManagement = () => {
                   }}
                   className={`${
                     item.current
-                      ? 'bg-purple-100 text-purple-900'
+                      ? 'bg-indigo-100 text-indigo-900'
                       : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                   } group flex items-center px-2 py-2 text-base font-medium rounded-md w-full text-left`}
                 >
-                  <item.icon className="mr-4 h-6 w-6" />
+                  <item.icon className="mr-3 h-6 w-6" />
                   {item.name}
                 </button>
               ))}
@@ -139,7 +140,7 @@ const UserManagement = () => {
         <div className="flex-1 flex flex-col min-h-0 bg-white border-r border-gray-200">
           <div className="flex-1 flex flex-col pt-5 pb-4 overflow-y-auto">
             <div className="flex items-center flex-shrink-0 px-4">
-              <Shield className="h-8 w-8 text-purple-600" />
+              <Shield className="h-8 w-8 text-indigo-600" />
               <span className="ml-2 text-xl font-bold text-gray-900">Disha AI</span>
             </div>
             <nav className="mt-5 flex-1 px-2 space-y-1">
@@ -153,7 +154,7 @@ const UserManagement = () => {
                   }}
                   className={`${
                     item.current
-                      ? 'bg-purple-100 text-purple-900'
+                      ? 'bg-indigo-100 text-indigo-900'
                       : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                   } group flex items-center px-2 py-2 text-sm font-medium rounded-md w-full text-left`}
                 >
@@ -171,7 +172,7 @@ const UserManagement = () => {
                     {user?.name}
                   </p>
                   <p className="text-xs font-medium text-gray-500 group-hover:text-gray-700">
-                    {user?.role}
+                    Admin
                   </p>
                 </div>
               </div>
@@ -182,78 +183,90 @@ const UserManagement = () => {
 
       {/* Main content */}
       <div className="lg:pl-64 flex flex-col flex-1">
-        <div className="sticky top-0 z-10 lg:hidden pl-1 pt-1 sm:pl-3 sm:pt-3 bg-gray-50">
-          <button
-            type="button"
-            className="-ml-0.5 -mt-0.5 h-12 w-12 inline-flex items-center justify-center rounded-md text-gray-500 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-purple-500"
-            onClick={() => setSidebarOpen(true)}
-          >
-            <Menu className="h-6 w-6" />
-          </button>
+        {/* Fixed Header */}
+        <div className="sticky top-0 z-20 bg-white border-b border-gray-200 shadow-sm">
+          <div className="px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between h-16">
+              {/* Mobile menu button */}
+              <div className="lg:hidden">
+                <button
+                  type="button"
+                  className="h-10 w-10 inline-flex items-center justify-center rounded-md text-gray-500 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500"
+                  onClick={() => setSidebarOpen(true)}
+                >
+                  <Menu className="h-6 w-6" />
+                </button>
+              </div>
+
+              {/* Title */}
+              <div className="flex items-center gap-3 min-w-0 flex-1 lg:flex-none">
+                <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <Users className="w-4 h-4 text-indigo-600" />
+                </div>
+                <div className="min-w-0">
+                  <h1 className="text-lg font-semibold text-gray-900 truncate">{t.userManagement}</h1>
+                  <p className="text-xs text-gray-500 hidden sm:block">{t.manageSystemUsers}</p>
+                </div>
+              </div>
+
+              {/* Right side controls */}
+              <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+                {/* Online Status */}
+                <div className="hidden sm:flex items-center gap-2 text-sm">
+                  {isOnline ? (
+                    <Wifi className="w-4 h-4 text-green-600" />
+                  ) : (
+                    <WifiOff className="w-4 h-4 text-red-600" />
+                  )}
+                  <span className="text-gray-600">
+                    {isOnline ? t.online : t.offline}
+                  </span>
+                </div>
+
+                {/* Sync Button */}
+                <button
+                  onClick={handleSync}
+                  disabled={isSyncing || !isOnline}
+                  className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
+                    isSyncing || !isOnline
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : 'bg-indigo-600 text-white hover:bg-indigo-700'
+                  }`}
+                >
+                  <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
+                  <span className="hidden sm:inline">{isSyncing ? t.syncing : t.sync}</span>
+                </button>
+
+                {/* Language Selector */}
+                <div className="flex items-center gap-1 sm:gap-2">
+                  <Globe className="w-4 h-4 text-gray-500 hidden sm:block" />
+                  <select
+                    value={language}
+                    onChange={(e) => changeLanguage(e.target.value)}
+                    className="text-xs sm:text-sm border border-gray-300 rounded-lg px-1 sm:px-2 py-1 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent min-w-0"
+                  >
+                    <option value="en">EN</option>
+                    <option value="bn">বাংলা</option>
+                    <option value="hi">हिन्दी</option>
+                  </select>
+                </div>
+
+                {/* Add User Button */}
+                <button
+                  onClick={() => console.log('Add user')}
+                  className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors bg-indigo-600 text-white hover:bg-indigo-700"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span className="hidden sm:inline">{t.addUser}</span>
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
 
         <main className="flex-1">
           <div className="py-6">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
-              {/* Fixed Header */}
-              <div className="sticky top-0 z-30 bg-white border-b border-gray-200 mb-8 -mx-4 sm:-mx-6 md:-mx-8 px-4 sm:px-6 md:px-8 py-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    <div>
-                      <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{t.userManagement}</h1>
-                      <p className="text-sm text-gray-600">{t.manageSystemUsers}</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center space-x-3">
-                    {/* Language Selector */}
-                    <div className="flex items-center space-x-2">
-                      <Globe className="w-4 h-4 text-gray-500" />
-                      <select
-                        value={language}
-                        onChange={(e) => changeLanguage(e.target.value)}
-                        className="text-sm border border-gray-300 rounded-md px-2 py-1 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                      >
-                        <option value="en">English</option>
-                        <option value="bn">বাংলা</option>
-                        <option value="hi">हिन्दी</option>
-                      </select>
-                    </div>
-                    
-                    {/* Sync Button */}
-                    <button
-                      onClick={handleSync}
-                      disabled={isSyncing}
-                      className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                        isSyncing
-                          ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
-                          : 'bg-purple-100 text-purple-700 hover:bg-purple-200'
-                      }`}
-                    >
-                      <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
-                      <span>{isSyncing ? t.syncing : t.sync}</span>
-                    </button>
-                    
-                    {/* Online Status */}
-                    <div className="flex items-center space-x-2">
-                      {isOnline ? (
-                        <Wifi className="w-4 h-4 text-green-500" />
-                      ) : (
-                        <WifiOff className="w-4 h-4 text-red-500" />
-                      )}
-                      <span className="text-sm text-gray-600">
-                        {isOnline ? t.online : t.offline}
-                      </span>
-                    </div>
-                    
-                    {/* Add User Button */}
-                    <button className="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 transition-colors flex items-center gap-2">
-                      <Plus className="h-4 w-4" />
-                      Add User
-                    </button>
-                  </div>
-                </div>
-              </div>
 
               {/* User Management Content */}
               <div className="space-y-6">
@@ -265,7 +278,7 @@ const UserManagement = () => {
                         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                         <input
                           type="text"
-                          placeholder="Search users..."
+                          placeholder={t.searchUsers}
                           value={searchTerm}
                           onChange={(e) => setSearchTerm(e.target.value)}
                           className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
@@ -275,11 +288,11 @@ const UserManagement = () => {
                     <div className="flex gap-2">
                       <button className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
                         <Filter className="h-4 w-4" />
-                        Filter
+                        {t.filter}
                       </button>
                       <button className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
                         <Download className="h-4 w-4" />
-                        Export
+                        {t.export}
                       </button>
                     </div>
                   </div>
@@ -288,18 +301,18 @@ const UserManagement = () => {
                 {/* Users Table */}
                 <div className="bg-white shadow rounded-lg overflow-hidden">
                   <div className="px-6 py-4 border-b border-gray-200">
-                    <h3 className="text-lg font-medium text-gray-900">Users ({filteredUsers.length})</h3>
+                    <h3 className="text-lg font-medium text-gray-900">{t.users} ({filteredUsers.length})</h3>
                   </div>
                   <div className="overflow-x-auto">
                     <table className="min-w-full divide-y divide-gray-200">
                       <thead className="bg-gray-50">
                         <tr>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Login</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t.name}</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t.email}</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t.role}</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t.status}</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t.lastLogin}</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t.actions}</th>
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
@@ -326,14 +339,16 @@ const UserManagement = () => {
                                 user.role === 'authority' ? 'bg-red-100 text-red-800' :
                                 'bg-blue-100 text-blue-800'
                               }`}>
-                                {user.role}
+                                {user.role === 'admin' ? t.admin : 
+                                 user.role === 'authority' ? t.authority : 
+                                 user.role === 'citizen' ? t.citizen : user.role}
                               </span>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
                               <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                                 user.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                               }`}>
-                                {user.status}
+                                {user.status === 'active' ? t.active : t.inactive}
                               </span>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.lastLogin}</td>

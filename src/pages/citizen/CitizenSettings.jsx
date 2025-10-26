@@ -20,14 +20,17 @@ import {
   Trash2,
   LogOut,
   Save,
-  CheckCircle
+  CheckCircle,
+  Home,
+  Phone,
+  MapPin
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import { useRole } from '../context/RoleContext';
-import { getTranslation } from '../utils/i18n';
+import { useAuth } from '../../context/AuthContext';
+import { useRole } from '../../context/RoleContext';
+import { getTranslation } from '../../utils/i18n';
 
-const SettingsPage = () => {
+const CitizenSettings = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const { language, changeLanguage } = useRole();
@@ -43,7 +46,9 @@ const SettingsPage = () => {
     language: language,
     emergencyAlerts: true,
     weatherAlerts: true,
-    aiSuggestions: true
+    aiSuggestions: true,
+    familySharing: false,
+    sosContacts: true
   });
 
   const handleSync = async () => {
@@ -73,7 +78,7 @@ const SettingsPage = () => {
 
   const handleSaveSettings = () => {
     // Save settings logic here
-    console.log('Settings saved:', settings);
+    console.log('Citizen settings saved:', settings);
   };
 
   const handleLogout = () => {
@@ -81,10 +86,10 @@ const SettingsPage = () => {
   };
 
   const navigation = [
-    { name: t.dashboard, href: '/citizen', icon: Bell, current: false },
+    { name: t.dashboard, href: '/citizen', icon: Home, current: false },
     { name: t.aiAssistant, href: '/ai-assistant', icon: Brain, current: false },
     { name: t.emergencyTools, href: '/emergency-tools', icon: Shield, current: false },
-    { name: t.settings, href: '/settings', icon: Settings, current: true },
+    { name: t.settings, href: '/citizen/settings', icon: Settings, current: true },
   ];
 
   return (
@@ -114,11 +119,6 @@ const SettingsPage = () => {
                   onClick={() => {
                     if (item.href.startsWith('/')) {
                       navigate(item.href);
-                    } else if (item.href.startsWith('#')) {
-                      const element = document.querySelector(item.href);
-                      if (element) {
-                        element.scrollIntoView({ behavior: 'smooth' });
-                      }
                     }
                     setSidebarOpen(false);
                   }}
@@ -152,11 +152,6 @@ const SettingsPage = () => {
                   onClick={() => {
                     if (item.href.startsWith('/')) {
                       navigate(item.href);
-                    } else if (item.href.startsWith('#')) {
-                      const element = document.querySelector(item.href);
-                      if (element) {
-                        element.scrollIntoView({ behavior: 'smooth' });
-                      }
                     }
                   }}
                   className={`${
@@ -179,7 +174,7 @@ const SettingsPage = () => {
                     {user?.name}
                   </p>
                   <p className="text-xs font-medium text-gray-500 group-hover:text-gray-700">
-                    {user?.role}
+                    Citizen
                   </p>
                 </div>
               </div>
@@ -207,18 +202,18 @@ const SettingsPage = () => {
 
               {/* Title */}
               <div className="flex items-center gap-3 min-w-0 flex-1 lg:flex-none">
-                <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <Settings className="w-4 h-4 text-gray-600" />
+                <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <Settings className="w-4 h-4 text-blue-600" />
                 </div>
                 <div className="min-w-0">
-                  <h1 className="text-lg font-semibold text-gray-900 truncate">{t.settings}</h1>
-                  <p className="text-xs text-gray-500 hidden sm:block">{t.managePreferences}</p>
+                  <h1 className="text-lg font-semibold text-gray-900 truncate">Citizen Settings</h1>
+                  <p className="text-xs text-gray-500 hidden sm:block">Manage your personal preferences and safety settings</p>
                 </div>
               </div>
 
               {/* Right side controls */}
               <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
-                {/* Online Status - Hidden on mobile */}
+                {/* Online Status */}
                 <div className="hidden sm:flex items-center gap-2 text-sm">
                   {isOnline ? (
                     <Wifi className="w-4 h-4 text-green-600" />
@@ -279,15 +274,15 @@ const SettingsPage = () => {
                         <User className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                       </div>
                       <div className="min-w-0">
-                        <h2 className="text-lg sm:text-xl font-bold text-gray-900">{t.accountSettings}</h2>
-                        <p className="text-xs sm:text-sm text-gray-600">{t.manageProfile}</p>
+                        <h2 className="text-lg sm:text-xl font-bold text-gray-900">Citizen Account</h2>
+                        <p className="text-xs sm:text-sm text-gray-600">Manage your personal profile and emergency contacts</p>
                       </div>
                     </div>
                     
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-4">
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">{t.fullName}</label>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
                           <input
                             type="text"
                             value={user?.name || ''}
@@ -296,10 +291,10 @@ const SettingsPage = () => {
                           />
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">{t.role}</label>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Role</label>
                           <input
                             type="text"
-                            value={user?.role || ''}
+                            value="Citizen"
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             readOnly
                           />
@@ -307,7 +302,7 @@ const SettingsPage = () => {
                       </div>
                       <div className="space-y-4">
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">{t.email}</label>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
                           <input
                             type="email"
                             value={user?.email || ''}
@@ -315,19 +310,26 @@ const SettingsPage = () => {
                             readOnly
                           />
                         </div>
-                        <button
-                          onClick={handleLogout}
-                          className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-                        >
-                          <LogOut className="w-4 h-4" />
-                            {t.logout}
-                        </button>
+                        <div>
+                          {/* Empty space to maintain grid alignment */}
+                        </div>
                       </div>
+                    </div>
+                    
+                    {/* Logout button below the grid */}
+                    <div className="mt-4">
+                      <button
+                        onClick={handleLogout}
+                        className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        Logout
+                      </button>
                     </div>
                   </div>
                 </motion.div>
 
-                {/* Notification Settings - Medium Card */}
+                {/* Safety Settings - Medium Card */}
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -337,32 +339,17 @@ const SettingsPage = () => {
                   <div className="p-4 sm:p-6">
                     <div className="flex items-center gap-3 mb-4 sm:mb-6">
                       <div className="w-8 h-8 sm:w-10 sm:h-10 bg-green-600 rounded-xl flex items-center justify-center flex-shrink-0">
-                        <NotificationIcon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                        <Shield className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                       </div>
                       <div className="min-w-0">
-                        <h2 className="text-base sm:text-lg font-bold text-gray-900">{t.notifications}</h2>
-                        <p className="text-xs text-gray-600">{t.alertPreferences}</p>
+                        <h2 className="text-base sm:text-lg font-bold text-gray-900">Safety Settings</h2>
+                        <p className="text-xs text-gray-600">Emergency and safety preferences</p>
                       </div>
                     </div>
                     
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium text-gray-700">{t.pushNotifications}</span>
-                        <button
-                          onClick={() => handleSettingChange('notifications', !settings.notifications)}
-                          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                            settings.notifications ? 'bg-green-600' : 'bg-gray-200'
-                          }`}
-                        >
-                          <span
-                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                              settings.notifications ? 'translate-x-6' : 'translate-x-1'
-                            }`}
-                          />
-                        </button>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium text-gray-700">{t.emergencyAlerts}</span>
+                        <span className="text-sm font-medium text-gray-700">Emergency Alerts</span>
                         <button
                           onClick={() => handleSettingChange('emergencyAlerts', !settings.emergencyAlerts)}
                           className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
@@ -377,16 +364,31 @@ const SettingsPage = () => {
                         </button>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium text-gray-700">{t.weatherAlerts}</span>
+                        <span className="text-sm font-medium text-gray-700">SOS Contacts</span>
                         <button
-                          onClick={() => handleSettingChange('weatherAlerts', !settings.weatherAlerts)}
+                          onClick={() => handleSettingChange('sosContacts', !settings.sosContacts)}
                           className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                            settings.weatherAlerts ? 'bg-green-600' : 'bg-gray-200'
+                            settings.sosContacts ? 'bg-green-600' : 'bg-gray-200'
                           }`}
                         >
                           <span
                             className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                              settings.weatherAlerts ? 'translate-x-6' : 'translate-x-1'
+                              settings.sosContacts ? 'translate-x-6' : 'translate-x-1'
+                            }`}
+                          />
+                        </button>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-gray-700">Family Sharing</span>
+                        <button
+                          onClick={() => handleSettingChange('familySharing', !settings.familySharing)}
+                          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                            settings.familySharing ? 'bg-green-600' : 'bg-gray-200'
+                          }`}
+                        >
+                          <span
+                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                              settings.familySharing ? 'translate-x-6' : 'translate-x-1'
                             }`}
                           />
                         </button>
@@ -395,7 +397,7 @@ const SettingsPage = () => {
                   </div>
                 </motion.div>
 
-                {/* Privacy & Security - Full Width Card */}
+                {/* Privacy & Location - Full Width Card */}
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -405,19 +407,19 @@ const SettingsPage = () => {
                   <div className="p-4 sm:p-6 lg:p-8">
                     <div className="flex items-center gap-3 mb-4 sm:mb-6">
                       <div className="w-8 h-8 sm:w-10 sm:h-10 bg-purple-600 rounded-xl flex items-center justify-center flex-shrink-0">
-                        <SecurityIcon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                        <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                       </div>
                       <div className="min-w-0">
-                        <h2 className="text-lg sm:text-xl font-bold text-gray-900">{t.privacySecurity}</h2>
-                        <p className="text-xs sm:text-sm text-gray-600">{t.manageDataSecurity}</p>
+                        <h2 className="text-lg sm:text-xl font-bold text-gray-900">Location & Privacy</h2>
+                        <p className="text-xs sm:text-sm text-gray-600">Manage your location sharing and privacy settings</p>
                       </div>
                     </div>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                       <div className="space-y-4">
-                        <h3 className="font-semibold text-gray-900">{t.locationServices}</h3>
+                        <h3 className="font-semibold text-gray-900">Location Services</h3>
                         <div className="flex items-center justify-between">
-                          <span className="text-sm text-gray-700">{t.locationAccess}</span>
+                          <span className="text-sm text-gray-700">Location Access</span>
                           <button
                             onClick={() => handleSettingChange('location', !settings.location)}
                             className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
@@ -434,23 +436,45 @@ const SettingsPage = () => {
                       </div>
                       
                       <div className="space-y-4">
-                        <h3 className="font-semibold text-gray-900">{t.dataManagement}</h3>
+                        <h3 className="font-semibold text-gray-900">Notifications</h3>
                         <div className="space-y-2">
-                          <button className="w-full flex items-center gap-2 px-3 py-2 bg-white rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
-                            <Download className="w-4 h-4" />
-                            <span className="text-sm">{t.exportData}</span>
-                          </button>
-                          <button className="w-full flex items-center gap-2 px-3 py-2 bg-white rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
-                            <Trash2 className="w-4 h-4" />
-                            <span className="text-sm">{t.clearCache}</span>
-                          </button>
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm text-gray-700">Push Notifications</span>
+                            <button
+                              onClick={() => handleSettingChange('notifications', !settings.notifications)}
+                              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                                settings.notifications ? 'bg-purple-600' : 'bg-gray-200'
+                              }`}
+                            >
+                              <span
+                                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                                  settings.notifications ? 'translate-x-6' : 'translate-x-1'
+                                }`}
+                              />
+                            </button>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm text-gray-700">Weather Alerts</span>
+                            <button
+                              onClick={() => handleSettingChange('weatherAlerts', !settings.weatherAlerts)}
+                              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                                settings.weatherAlerts ? 'bg-purple-600' : 'bg-gray-200'
+                              }`}
+                            >
+                              <span
+                                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                                  settings.weatherAlerts ? 'translate-x-6' : 'translate-x-1'
+                                }`}
+                              />
+                            </button>
+                          </div>
                         </div>
                       </div>
                       
                       <div className="space-y-4">
-                        <h3 className="font-semibold text-gray-900">{t.aiFeatures}</h3>
+                        <h3 className="font-semibold text-gray-900">AI Features</h3>
                         <div className="flex items-center justify-between">
-                          <span className="text-sm text-gray-700">{t.aiSuggestions}</span>
+                          <span className="text-sm text-gray-700">AI Suggestions</span>
                           <button
                             onClick={() => handleSettingChange('aiSuggestions', !settings.aiSuggestions)}
                             className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
@@ -481,7 +505,7 @@ const SettingsPage = () => {
                     className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
                   >
                     <Save className="w-4 h-4" />
-                    {t.saveSettings}
+                    Save Settings
                   </button>
                 </motion.div>
               </div>
@@ -493,4 +517,4 @@ const SettingsPage = () => {
   );
 };
 
-export default SettingsPage;
+export default CitizenSettings;

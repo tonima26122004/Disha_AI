@@ -80,21 +80,31 @@ export const DONATION_LINKS = [
 export const MOCK_USERS = [
   { 
     id: "U-1023", 
+    name: "John Doe",
     lastSeen: "Salt Lake", 
-    status: "Safe",
-    location: { latitude: 22.5937, longitude: 88.3639 }
+    status: "safe",
+    location: { lat: 22.5937, lng: 88.3639 }
   },
   { 
     id: "U-1044", 
+    name: "Jane Smith",
     lastSeen: "Howrah", 
-    status: "Needs Aid",
-    location: { latitude: 22.5739, longitude: 88.3478 }
+    status: "needs_aid",
+    location: { lat: 22.5739, lng: 88.3478 }
   },
   { 
     id: "U-1055", 
+    name: "Mike Johnson",
     lastSeen: "Kolkata Central", 
-    status: "Safe",
-    location: { latitude: 22.5726, longitude: 88.3639 }
+    status: "safe",
+    location: { lat: 22.5726, lng: 88.3639 }
+  },
+  { 
+    id: "U-1066", 
+    name: "Sarah Wilson",
+    lastSeen: "Park Street", 
+    status: "evacuated",
+    location: { lat: 22.5626, lng: 88.3539 }
   }
 ];
 
@@ -145,3 +155,11 @@ export const RISK_PREDICTION = {
   heatwaveRisk: "High",
   earthquakeRisk: "Low"
 };
+
+// Alert distribution data for charts
+export const ALERT_DISTRIBUTION = [
+  { type: "Flood", count: 5 },
+  { type: "Cyclone", count: 3 },
+  { type: "Earthquake", count: 1 },
+  { type: "Heatwave", count: 2 }
+];

@@ -19,9 +19,9 @@ import {
   MapPin,
   User
 } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
-import { useRole } from '../context/RoleContext';
-import { getTranslation } from '../utils/i18n';
+import { useAuth } from '../../context/AuthContext';
+import { useRole } from '../../context/RoleContext';
+import { getTranslation } from '../../utils/i18n';
 
 const AlertManagement = () => {
   const navigate = useNavigate();
@@ -72,6 +72,52 @@ const AlertManagement = () => {
     }
   ]);
   const t = getTranslation(language);
+
+  // Function to translate alert data
+  const translateAlertData = (alert) => {
+    const translations = {
+      title: {
+        "Flood Warning": t.floodWarning,
+        "Traffic Alert": t.trafficAlert,
+        "Emergency Response": t.emergencyResponse,
+      },
+      description: {
+        "Heavy rainfall expected in coastal areas": t.heavyRainfallExpectedInCoastalAreas,
+        "Major road closure due to construction": t.majorRoadClosureDueToConstruction,
+        "Medical emergency in downtown area": t.medicalEmergencyInDowntownArea,
+      },
+      location: {
+        "Kolkata, West Bengal": t.kolkataWestBengal,
+        "Mumbai, Maharashtra": t.mumbaiMaharashtra,
+        "Delhi, Delhi": t.delhiDelhi,
+      },
+      severity: {
+        "high": t.high,
+        "medium": t.medium,
+        "low": t.low,
+        "critical": t.critical,
+      },
+      status: {
+        "active": t.active,
+        "resolved": t.resolved,
+      },
+      type: {
+        "weather": t.weather,
+        "traffic": t.traffic,
+        "emergency": t.emergency,
+      }
+    };
+
+    return {
+      ...alert,
+      title: translations.title[alert.title] || alert.title,
+      description: translations.description[alert.description] || alert.description,
+      location: translations.location[alert.location] || alert.location,
+      severity: translations.severity[alert.severity] || alert.severity,
+      status: translations.status[alert.status] || alert.status,
+      type: translations.type[alert.type] || alert.type,
+    };
+  };
 
   useEffect(() => {
     loadAlerts();
@@ -218,7 +264,7 @@ const AlertManagement = () => {
                     {user?.name}
                   </p>
                   <p className="text-xs font-medium text-gray-500 group-hover:text-gray-700">
-                    {user?.role}
+                    {t.authority}
                   </p>
                 </div>
               </div>
@@ -229,133 +275,145 @@ const AlertManagement = () => {
 
       {/* Main content */}
       <div className="lg:pl-64 flex flex-col flex-1">
-        <div className="sticky top-0 z-10 lg:hidden pl-1 pt-1 sm:pl-3 sm:pt-3 bg-gray-50">
-          <button
-            type="button"
-            className="-ml-0.5 -mt-0.5 h-12 w-12 inline-flex items-center justify-center rounded-md text-gray-500 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-red-500"
-            onClick={() => setSidebarOpen(true)}
-          >
-            <Menu className="h-6 w-6" />
-          </button>
+        {/* Fixed Header */}
+        <div className="sticky top-0 z-20 bg-white border-b border-gray-200 shadow-sm">
+          <div className="px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between h-16">
+              {/* Mobile menu button */}
+              <div className="lg:hidden">
+                <button
+                  type="button"
+                  className="h-10 w-10 inline-flex items-center justify-center rounded-md text-gray-500 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-red-500"
+                  onClick={() => setSidebarOpen(true)}
+                >
+                  <Menu className="h-6 w-6" />
+                </button>
+              </div>
+
+              {/* Title */}
+              <div className="flex items-center gap-3 min-w-0 flex-1 lg:flex-none">
+                <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <Bell className="w-4 h-4 text-red-600" />
+                </div>
+                <div className="min-w-0">
+                  <h1 className="text-lg font-semibold text-gray-900 truncate">{t.alertManagement}</h1>
+                  <p className="text-xs text-gray-500 hidden sm:block">{t.latestDisasterWarnings}</p>
+                </div>
+              </div>
+
+              {/* Right side controls */}
+              <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+                {/* Online Status */}
+                <div className="hidden sm:flex items-center gap-2 text-sm">
+                  {isOnline ? (
+                    <Wifi className="w-4 h-4 text-green-600" />
+                  ) : (
+                    <WifiOff className="w-4 h-4 text-red-600" />
+                  )}
+                  <span className="text-gray-600">
+                    {isOnline ? t.online : t.offline}
+                  </span>
+                </div>
+
+                {/* Sync Button */}
+                <button
+                  onClick={handleSync}
+                  disabled={isSyncing || !isOnline}
+                  className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
+                    isSyncing || !isOnline
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : 'bg-red-600 text-white hover:bg-red-700'
+                  }`}
+                >
+                  <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
+                  <span className="hidden sm:inline">{isSyncing ? t.syncing : t.sync}</span>
+                </button>
+
+                {/* Language Selector */}
+                <div className="flex items-center gap-1 sm:gap-2">
+                  <Globe className="w-4 h-4 text-gray-500 hidden sm:block" />
+                  <select
+                    value={language}
+                    onChange={(e) => changeLanguage(e.target.value)}
+                    className="text-xs sm:text-sm border border-gray-300 rounded-lg px-1 sm:px-2 py-1 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent min-w-0"
+                  >
+                    <option value="en">EN</option>
+                    <option value="bn">বাংলা</option>
+                    <option value="hi">हिन्दी</option>
+                  </select>
+                </div>
+
+                {/* Create Alert Button */}
+                <button
+                  onClick={() => setShowCreateAlert(true)}
+                  className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors bg-red-600 text-white hover:bg-red-700"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span className="hidden sm:inline">{t.createAlert}</span>
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
 
         <main className="flex-1">
           <div className="py-6">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
-              {/* Fixed Header */}
-              <div className="sticky top-0 z-30 bg-white border-b border-gray-200 mb-8 -mx-4 sm:-mx-6 md:-mx-8 px-4 sm:px-6 md:px-8 py-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    <div>
-                      <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{t.alertManagement}</h1>
-                      <p className="text-sm text-gray-600">{t.latestDisasterWarnings}</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center space-x-3">
-                    {/* Language Selector */}
-                    <div className="flex items-center space-x-2">
-                      <Globe className="w-4 h-4 text-gray-500" />
-                      <select
-                        value={language}
-                        onChange={(e) => changeLanguage(e.target.value)}
-                        className="text-sm border border-gray-300 rounded-md px-2 py-1 focus:outline-none focus:ring-2 focus:ring-red-500"
-                      >
-                        <option value="en">English</option>
-                        <option value="bn">বাংলা</option>
-                        <option value="hi">हिन्दी</option>
-                      </select>
-                    </div>
-                    
-                    {/* Sync Button */}
-                    <button
-                      onClick={handleSync}
-                      disabled={isSyncing}
-                      className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                        isSyncing
-                          ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
-                          : 'bg-red-100 text-red-700 hover:bg-red-200'
-                      }`}
-                    >
-                      <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
-                      <span>{isSyncing ? t.syncing : t.sync}</span>
-                    </button>
-                    
-                    {/* Online Status */}
-                    <div className="flex items-center space-x-2">
-                      {isOnline ? (
-                        <Wifi className="w-4 h-4 text-green-500" />
-                      ) : (
-                        <WifiOff className="w-4 h-4 text-red-500" />
-                      )}
-                      <span className="text-sm text-gray-600">
-                        {isOnline ? t.online : t.offline}
-                      </span>
-                    </div>
-                    
-                    {/* Create Alert Button */}
-                    <button
-                      onClick={() => setShowCreateAlert(true)}
-                      className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors flex items-center gap-2"
-                    >
-                      <Plus className="h-4 w-4" />
-                      {t.createAlert}
-                    </button>
-                  </div>
-                </div>
-              </div>
 
               {/* Alert Management Content */}
               <div className="space-y-6">
                 {/* Alerts List */}
                 <div className="bg-white shadow rounded-lg overflow-hidden">
                   <div className="px-6 py-4 border-b border-gray-200">
-                    <h3 className="text-lg font-medium text-gray-900">Active Alerts ({alerts.filter(a => a.status === 'active').length})</h3>
+                    <h3 className="text-lg font-medium text-gray-900">{t.activeAlerts} ({alerts.filter(a => a.status === 'active').length})</h3>
                   </div>
                   <div className="divide-y divide-gray-200">
-                    {alerts.map((alert) => (
-                      <div key={alert.id} className="p-6 hover:bg-gray-50">
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <div className="flex items-center space-x-3">
-                              <AlertTriangle className="h-5 w-5 text-red-500" />
-                              <h4 className="text-lg font-medium text-gray-900">{alert.title}</h4>
-                              <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getSeverityColor(alert.severity)}`}>
-                                {alert.severity}
-                              </span>
-                              <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                                alert.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                              }`}>
-                                {alert.status}
-                              </span>
+                    {alerts.map((alert) => {
+                      const translatedAlert = translateAlertData(alert);
+                      return (
+                        <div key={alert.id} className="p-6 hover:bg-gray-50">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center space-x-3">
+                                <AlertTriangle className="h-5 w-5 text-red-500" />
+                                <h4 className="text-lg font-medium text-gray-900">{translatedAlert.title}</h4>
+                                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getSeverityColor(alert.severity)}`}>
+                                  {translatedAlert.severity}
+                                </span>
+                                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                                  alert.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                                }`}>
+                                  {translatedAlert.status}
+                                </span>
+                              </div>
+                              <p className="mt-2 text-sm text-gray-600">{translatedAlert.description}</p>
+                              <div className="mt-3 flex items-center space-x-4 text-sm text-gray-500">
+                                <div className="flex items-center">
+                                  <MapPin className="h-4 w-4 mr-1" />
+                                  {translatedAlert.location}
+                                </div>
+                                <div className="flex items-center">
+                                  <Clock className="h-4 w-4 mr-1" />
+                                  {alert.timestamp}
+                                </div>
+                                <div className="flex items-center">
+                                  <User className="h-4 w-4 mr-1" />
+                                  {translatedAlert.type}
+                                </div>
+                              </div>
                             </div>
-                            <p className="mt-2 text-sm text-gray-600">{alert.description}</p>
-                            <div className="mt-3 flex items-center space-x-4 text-sm text-gray-500">
-                              <div className="flex items-center">
-                                <MapPin className="h-4 w-4 mr-1" />
-                                {alert.location}
-                              </div>
-                              <div className="flex items-center">
-                                <Clock className="h-4 w-4 mr-1" />
-                                {alert.timestamp}
-                              </div>
-                              <div className="flex items-center">
-                                <User className="h-4 w-4 mr-1" />
-                                {alert.type}
-                              </div>
+                            <div className="flex space-x-2">
+                              <button className="text-blue-600 hover:text-blue-900 text-sm font-medium">
+                                {t.viewDetails}
+                              </button>
+                              <button className="text-green-600 hover:text-green-900 text-sm font-medium">
+                                {t.resolve}
+                              </button>
                             </div>
-                          </div>
-                          <div className="flex space-x-2">
-                            <button className="text-blue-600 hover:text-blue-900 text-sm font-medium">
-                              View Details
-                            </button>
-                            <button className="text-green-600 hover:text-green-900 text-sm font-medium">
-                              Resolve
-                            </button>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               </div>
@@ -371,64 +429,64 @@ const AlertManagement = () => {
             <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={() => setShowCreateAlert(false)}></div>
             <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
               <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Create New Alert</h3>
+                <h3 className="text-lg font-medium text-gray-900 mb-4">{t.createNewAlert}</h3>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Title</label>
+                    <label className="block text-sm font-medium text-gray-700">{t.title}</label>
                     <input
                       type="text"
                       value={newAlert.title}
                       onChange={(e) => setNewAlert({...newAlert, title: e.target.value})}
                       className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
-                      placeholder="Enter alert title"
+                      placeholder={t.enterAlertTitle}
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Description</label>
+                    <label className="block text-sm font-medium text-gray-700">{t.description}</label>
                     <textarea
                       value={newAlert.description}
                       onChange={(e) => setNewAlert({...newAlert, description: e.target.value})}
                       className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
                       rows={3}
-                      placeholder="Enter alert description"
+                      placeholder={t.enterAlertDescription}
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Severity</label>
+                      <label className="block text-sm font-medium text-gray-700">{t.severity}</label>
                       <select
                         value={newAlert.severity}
                         onChange={(e) => setNewAlert({...newAlert, severity: e.target.value})}
                         className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
                       >
-                        <option value="low">Low</option>
-                        <option value="medium">Medium</option>
-                        <option value="high">High</option>
-                        <option value="critical">Critical</option>
+                        <option value="low">{t.low}</option>
+                        <option value="medium">{t.medium}</option>
+                        <option value="high">{t.high}</option>
+                        <option value="critical">{t.critical}</option>
                       </select>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Type</label>
+                      <label className="block text-sm font-medium text-gray-700">{t.type}</label>
                       <select
                         value={newAlert.type}
                         onChange={(e) => setNewAlert({...newAlert, type: e.target.value})}
                         className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
                       >
-                        <option value="emergency">Emergency</option>
-                        <option value="weather">Weather</option>
-                        <option value="traffic">Traffic</option>
-                        <option value="safety">Safety</option>
+                        <option value="emergency">{t.emergency}</option>
+                        <option value="weather">{t.weather}</option>
+                        <option value="traffic">{t.traffic}</option>
+                        <option value="safety">{t.safety}</option>
                       </select>
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Location</label>
+                    <label className="block text-sm font-medium text-gray-700">{t.location}</label>
                     <input
                       type="text"
                       value={newAlert.location}
                       onChange={(e) => setNewAlert({...newAlert, location: e.target.value})}
                       className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
-                      placeholder="Enter location"
+                      placeholder={t.enterLocation}
                     />
                   </div>
                 </div>
@@ -438,13 +496,13 @@ const AlertManagement = () => {
                   onClick={handleCreateAlert}
                   className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm"
                 >
-                  Create Alert
+                  {t.createAlert}
                 </button>
                 <button
                   onClick={() => setShowCreateAlert(false)}
                   className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
                 >
-                  Cancel
+                  {t.cancel}
                 </button>
               </div>
             </div>

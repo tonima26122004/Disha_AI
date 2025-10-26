@@ -1,37 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
-  Bell, 
   Brain, 
-  Phone, 
-  Settings, 
   Menu, 
   X,
   Shield,
+  Bell,
+  Settings,
   RefreshCw,
   Wifi,
   WifiOff,
   Globe
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import { useRole } from '../context/RoleContext';
-import { getTranslation } from '../utils/i18n';
-import RealTimeAlerts from '../components/RealTimeAlerts';
-import WeatherReport from '../components/WeatherReport';
+import { useRole } from '../../context/RoleContext';
+import { getTranslation } from '../../utils/i18n';
+import AIAssistant from '../../components/citizen/AIAssistant';
 
-const CitizenDashboard = () => {
+const AIAssistantPage = () => {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
-  const { currentRole, language, changeLanguage } = useRole();
+  const { language, changeLanguage } = useRole();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [isSyncing, setIsSyncing] = useState(false);
   const t = getTranslation(language);
-
-  const handleLogout = () => {
-    logout();
-  };
 
   const handleSync = async () => {
     setIsSyncing(true);
@@ -54,11 +46,12 @@ const CitizenDashboard = () => {
     };
   }, []);
 
+  // Navigation items
   const navigation = [
-    { name: t.dashboard, href: '/citizen', icon: Bell, current: true },
-    { name: t.aiAssistant, href: '/ai-assistant', icon: Brain, current: false },
+    { name: t.dashboard, href: '/citizen', icon: Bell, current: false },
+    { name: t.aiAssistant, href: '/ai-assistant', icon: Brain, current: true },
     { name: t.emergencyTools, href: '/emergency-tools', icon: Shield, current: false },
-    { name: t.settings, href: '/settings', icon: Settings, current: false },
+    { name: t.settings, href: '/citizen/settings', icon: Settings, current: false },
   ];
 
   return (
@@ -95,6 +88,7 @@ const CitizenDashboard = () => {
                         element.scrollIntoView({ behavior: 'smooth' });
                       }
                     }
+                    setSidebarOpen(false);
                   }}
                   className={`${
                     item.current
@@ -146,20 +140,6 @@ const CitizenDashboard = () => {
               ))}
             </nav>
           </div>
-          <div className="flex-shrink-0 flex border-t border-gray-200 p-4">
-            <div className="flex-shrink-0 w-full group block">
-              <div className="flex items-center">
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-700 group-hover:text-gray-900">
-                    {user?.name}
-                  </p>
-                  <p className="text-xs font-medium text-gray-500 group-hover:text-gray-700">
-                    {user?.role}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
 
@@ -182,12 +162,12 @@ const CitizenDashboard = () => {
 
               {/* Title */}
               <div className="flex items-center gap-3 min-w-0 flex-1 lg:flex-none">
-                <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <Bell className="w-4 h-4 text-blue-600" />
+                <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <Brain className="w-4 h-4 text-purple-600" />
                 </div>
                 <div className="min-w-0">
-                  <h1 className="text-lg font-semibold text-gray-900 truncate">{t.citizenDashboard}</h1>
-                  <p className="text-xs text-gray-500 hidden sm:block">{t.stayInformed}</p>
+                  <h1 className="text-lg font-semibold text-gray-900 truncate">{t.assistant}</h1>
+                  <p className="text-xs text-gray-500 hidden sm:block">{t.askAbout}</p>
                 </div>
               </div>
 
@@ -242,89 +222,23 @@ const CitizenDashboard = () => {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
               {/* Professional Bento Grid Layout */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-4 sm:gap-6">
-                {/* Real-time Alerts - Large Card */}
+                {/* AI Assistant - Full Width Card */}
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="md:col-span-2 lg:col-span-8 bg-gradient-to-br from-red-50 to-red-100 rounded-2xl shadow-lg border border-red-200 overflow-hidden"
+                  className="md:col-span-2 lg:col-span-12 bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl shadow-lg border border-purple-200 overflow-hidden"
                 >
                   <div className="p-4 sm:p-6 lg:p-8">
-                    <RealTimeAlerts lang={language} />
-                  </div>
-                </motion.div>
-
-                {/* Quick Actions - Medium Card */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 }}
-                  className="md:col-span-2 lg:col-span-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl shadow-lg border border-blue-200 overflow-hidden"
-                >
-                  <div className="p-4 sm:p-6">
-                    <div className="flex items-center gap-3 mb-4 sm:mb-6">
-                      <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-600 rounded-xl flex items-center justify-center flex-shrink-0">
-                        <Bell className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-                      </div>
-                      <div className="min-w-0">
-            <h2 className="text-base sm:text-lg font-bold text-gray-900">{t.quickActions}</h2>
-            <p className="text-xs text-gray-600">{t.accessEssentialTools}</p>
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-3">
-                      <button
-                        onClick={() => navigate('/ai-assistant')}
-                        className="w-full flex items-center gap-3 p-3 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
-                      >
-                        <Brain className="w-4 h-4 sm:w-5 sm:h-5" />
-                        <span className="font-medium text-sm sm:text-base">AI Assistant</span>
-                      </button>
-                      
-                      <button
-                        onClick={() => navigate('/emergency-tools')}
-                        className="w-full flex items-center gap-3 p-3 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
-                      >
-                        <Shield className="w-4 h-4 sm:w-5 sm:h-5" />
-                        <span className="font-medium text-sm sm:text-base">Emergency Tools</span>
-                      </button>
-                      
-                      <button
-                        onClick={() => navigate('/settings')}
-                        className="w-full flex items-center gap-3 p-3 bg-gray-600 text-white rounded-xl hover:bg-gray-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
-                      >
-                        <Settings className="w-4 h-4 sm:w-5 sm:h-5" />
-                        <span className="font-medium text-sm sm:text-base">Settings</span>
-                      </button>
-                    </div>
-                  </div>
-                </motion.div>
-
-                {/* Weather Report - Full Width Card */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2 }}
-                  className="md:col-span-2 lg:col-span-12 bg-gradient-to-br from-green-50 to-green-100 rounded-2xl shadow-lg border border-green-200 overflow-hidden"
-                >
-                  <div className="p-4 sm:p-6 lg:p-8">
-                    <WeatherReport lang={language} />
+                    <AIAssistant lang={language} />
                   </div>
                 </motion.div>
               </div>
-
             </div>
           </div>
         </main>
-      </div>
-
-      {/* Floating SOS Button */}
-      <div className="fixed bottom-6 right-6 z-50">
-        <button className="bg-red-600 text-white p-4 rounded-full shadow-lg hover:bg-red-700 transition-colors">
-          <Phone className="h-6 w-6" />
-        </button>
       </div>
     </div>
   );
 };
 
-export default CitizenDashboard;
+export default AIAssistantPage;

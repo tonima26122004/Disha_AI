@@ -30,10 +30,10 @@ import {
   Trash2
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { getTranslation } from '../utils/i18n';
-import { useLocalStorage } from '../utils/storage';
-import { useRole } from '../context/RoleContext';
-import OfflineMap from '../components/OfflineMap';
+import { getTranslation } from '../../utils/i18n';
+import { useLocalStorage } from '../../utils/storage';
+import { useRole } from '../../context/RoleContext';
+import OfflineMap from '../../components/OfflineMap';
 
 const EmergencyTools = () => {
   const navigate = useNavigate();
@@ -313,7 +313,7 @@ const EmergencyTools = () => {
     { name: t.dashboard, href: '/citizen', icon: Bell, current: false },
     { name: t.aiAssistant, href: '/ai-assistant', icon: Brain, current: false },
     { name: t.emergencyTools, href: '/emergency-tools', icon: Shield, current: true },
-    { name: t.settings, href: '/settings', icon: Settings, current: false },
+    { name: t.settings, href: '/citizen/settings', icon: Settings, current: false },
   ];
 
   return (

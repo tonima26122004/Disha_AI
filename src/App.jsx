@@ -8,17 +8,21 @@ import ProtectedRoute from './routes/ProtectedRoute';
 import Landing from './pages/Landing';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
-import CitizenDashboard from './pages/CitizenDashboard';
-import AuthorityDashboard from './pages/AuthorityDashboard';
-import AdminDashboard from './pages/AdminDashboard';
-import UserManagement from './pages/UserManagement';
-import SystemSettings from './pages/SystemSettings';
-import DatabaseManagement from './pages/DatabaseManagement';
-import SecurityManagement from './pages/SecurityManagement';
-import AlertManagement from './pages/AlertManagement';
-import EmergencyTools from './pages/EmergencyTools';
-import AIAssistantPage from './pages/AIAssistant';
-import SettingsPage from './pages/Settings';
+import CitizenDashboard from './pages/citizen/CitizenDashboard';
+import AuthorityDashboard from './pages/authority/AuthorityDashboard';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import UserManagement from './pages/admin/UserManagement';
+import SystemSettings from './pages/admin/SystemSettings';
+import DatabaseManagement from './pages/admin/DatabaseManagement';
+import SecurityManagement from './pages/admin/SecurityManagement';
+import AlertManagement from './pages/authority/AlertManagement';
+import RescueCoordination from './pages/authority/RescueCoordination';
+import ReportsAnalytics from './pages/authority/ReportsAnalytics';
+import EmergencyTools from './pages/citizen/EmergencyTools';
+import AIAssistantPage from './pages/citizen/AIAssistant';
+import CitizenSettings from './pages/citizen/CitizenSettings';
+import AuthoritySettings from './pages/authority/AuthoritySettings';
+import AdminSettings from './pages/admin/AdminSettings';
 
 function App() {
   return (
@@ -61,7 +65,7 @@ function App() {
                 path="/authority/rescue" 
                 element={
                   <ProtectedRoute requiredRole="authority">
-                    <AuthorityDashboard />
+                    <RescueCoordination />
                   </ProtectedRoute>
                 } 
               />
@@ -69,7 +73,7 @@ function App() {
                 path="/authority/reports" 
                 element={
                   <ProtectedRoute requiredRole="authority">
-                    <AuthorityDashboard />
+                    <ReportsAnalytics />
                   </ProtectedRoute>
                 } 
               />
@@ -134,14 +138,40 @@ function App() {
                 } 
               />
               
-              {/* Settings - Accessible to all authenticated users */}
+              {/* Citizen Settings */}
               <Route 
-                path="/settings" 
+                path="/citizen/settings" 
                 element={
-                  <ProtectedRoute>
-                    <SettingsPage />
+                  <ProtectedRoute requiredRole="citizen">
+                    <CitizenSettings />
                   </ProtectedRoute>
                 } 
+              />
+              
+              {/* Authority Settings */}
+              <Route 
+                path="/authority/settings" 
+                element={
+                  <ProtectedRoute requiredRole="authority">
+                    <AuthoritySettings />
+                  </ProtectedRoute>
+                } 
+              />
+              
+              {/* Admin Settings */}
+              <Route 
+                path="/admin/admin-settings" 
+                element={
+                  <ProtectedRoute requiredRole="admin">
+                    <AdminSettings />
+                  </ProtectedRoute>
+                } 
+              />
+              
+              {/* Legacy Settings Route - Redirect to role-specific settings */}
+              <Route 
+                path="/settings" 
+                element={<Navigate to="/citizen/settings" replace />} 
               />
               
               {/* Redirects */}

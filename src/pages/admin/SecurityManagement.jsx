@@ -20,9 +20,9 @@ import {
   Key,
   AlertTriangle
 } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
-import { useRole } from '../context/RoleContext';
-import { getTranslation } from '../utils/i18n';
+import { useAuth } from '../../context/AuthContext';
+import { useRole } from '../../context/RoleContext';
+import { getTranslation } from '../../utils/i18n';
 
 const SecurityManagement = () => {
   const navigate = useNavigate();
@@ -87,6 +87,7 @@ const SecurityManagement = () => {
     { name: t.systemSettings, href: '/admin/settings', icon: Settings, current: false },
     { name: t.database, href: '/admin/database', icon: Database, current: false },
     { name: t.security, href: '/admin/security', icon: Lock, current: true },
+    { name: t.settings, href: '/admin/admin-settings', icon: Settings, current: false },
   ];
 
   return (
@@ -106,7 +107,7 @@ const SecurityManagement = () => {
           </div>
           <div className="flex-1 h-0 pt-5 pb-4 overflow-y-auto">
             <div className="flex-shrink-0 flex items-center px-4">
-              <Shield className="h-8 w-8 text-purple-600" />
+              <Shield className="h-8 w-8 text-indigo-600" />
               <span className="ml-2 text-xl font-bold text-gray-900">Disha AI</span>
             </div>
             <nav className="mt-5 px-2 space-y-1">
@@ -120,11 +121,11 @@ const SecurityManagement = () => {
                   }}
                   className={`${
                     item.current
-                      ? 'bg-purple-100 text-purple-900'
+                      ? 'bg-indigo-100 text-indigo-900'
                       : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                   } group flex items-center px-2 py-2 text-base font-medium rounded-md w-full text-left`}
                 >
-                  <item.icon className="mr-4 h-6 w-6" />
+                  <item.icon className="mr-3 h-6 w-6" />
                   {item.name}
                 </button>
               ))}
@@ -138,7 +139,7 @@ const SecurityManagement = () => {
         <div className="flex-1 flex flex-col min-h-0 bg-white border-r border-gray-200">
           <div className="flex-1 flex flex-col pt-5 pb-4 overflow-y-auto">
             <div className="flex items-center flex-shrink-0 px-4">
-              <Shield className="h-8 w-8 text-purple-600" />
+              <Shield className="h-8 w-8 text-indigo-600" />
               <span className="ml-2 text-xl font-bold text-gray-900">Disha AI</span>
             </div>
             <nav className="mt-5 flex-1 px-2 space-y-1">
@@ -152,7 +153,7 @@ const SecurityManagement = () => {
                   }}
                   className={`${
                     item.current
-                      ? 'bg-purple-100 text-purple-900'
+                      ? 'bg-indigo-100 text-indigo-900'
                       : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                   } group flex items-center px-2 py-2 text-sm font-medium rounded-md w-full text-left`}
                 >
@@ -170,7 +171,7 @@ const SecurityManagement = () => {
                     {user?.name}
                   </p>
                   <p className="text-xs font-medium text-gray-500 group-hover:text-gray-700">
-                    {user?.role}
+                    Admin
                   </p>
                 </div>
               </div>
@@ -181,81 +182,90 @@ const SecurityManagement = () => {
 
       {/* Main content */}
       <div className="lg:pl-64 flex flex-col flex-1">
-        <div className="sticky top-0 z-10 lg:hidden pl-1 pt-1 sm:pl-3 sm:pt-3 bg-gray-50">
-          <button
-            type="button"
-            className="-ml-0.5 -mt-0.5 h-12 w-12 inline-flex items-center justify-center rounded-md text-gray-500 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-purple-500"
-            onClick={() => setSidebarOpen(true)}
-          >
-            <Menu className="h-6 w-6" />
-          </button>
+        {/* Fixed Header */}
+        <div className="sticky top-0 z-20 bg-white border-b border-gray-200 shadow-sm">
+          <div className="px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between h-16">
+              {/* Mobile menu button */}
+              <div className="lg:hidden">
+                <button
+                  type="button"
+                  className="h-10 w-10 inline-flex items-center justify-center rounded-md text-gray-500 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500"
+                  onClick={() => setSidebarOpen(true)}
+                >
+                  <Menu className="h-6 w-6" />
+                </button>
+              </div>
+
+              {/* Title */}
+              <div className="flex items-center gap-3 min-w-0 flex-1 lg:flex-none">
+                <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <Lock className="w-4 h-4 text-indigo-600" />
+                </div>
+                <div className="min-w-0">
+                  <h1 className="text-lg font-semibold text-gray-900 truncate">{t.security}</h1>
+                  <p className="text-xs text-gray-500 hidden sm:block">{t.manageSystemUsers}</p>
+                </div>
+              </div>
+
+              {/* Right side controls */}
+              <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+                {/* Online Status */}
+                <div className="hidden sm:flex items-center gap-2 text-sm">
+                  {isOnline ? (
+                    <Wifi className="w-4 h-4 text-green-600" />
+                  ) : (
+                    <WifiOff className="w-4 h-4 text-red-600" />
+                  )}
+                  <span className="text-gray-600">
+                    {isOnline ? t.online : t.offline}
+                  </span>
+                </div>
+
+                {/* Sync Button */}
+                <button
+                  onClick={handleSync}
+                  disabled={isSyncing || !isOnline}
+                  className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
+                    isSyncing || !isOnline
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : 'bg-indigo-600 text-white hover:bg-indigo-700'
+                  }`}
+                >
+                  <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
+                  <span className="hidden sm:inline">{isSyncing ? t.syncing : t.sync}</span>
+                </button>
+
+                {/* Language Selector */}
+                <div className="flex items-center gap-1 sm:gap-2">
+                  <Globe className="w-4 h-4 text-gray-500 hidden sm:block" />
+                  <select
+                    value={language}
+                    onChange={(e) => changeLanguage(e.target.value)}
+                    className="text-xs sm:text-sm border border-gray-300 rounded-lg px-1 sm:px-2 py-1 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent min-w-0"
+                  >
+                    <option value="en">EN</option>
+                    <option value="bn">বাংলা</option>
+                    <option value="hi">हिन्दी</option>
+                  </select>
+                </div>
+
+                {/* Save Button */}
+                <button
+                  onClick={handleSaveSecurity}
+                  className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors bg-indigo-600 text-white hover:bg-indigo-700"
+                >
+                  <Lock className="w-4 h-4" />
+                  <span className="hidden sm:inline">{t.saveSecurity}</span>
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
 
         <main className="flex-1">
           <div className="py-6">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
-              {/* Fixed Header */}
-              <div className="sticky top-0 z-30 bg-white border-b border-gray-200 mb-8 -mx-4 sm:-mx-6 md:-mx-8 px-4 sm:px-6 md:px-8 py-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    <div>
-                      <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{t.security}</h1>
-                      <p className="text-sm text-gray-600">{t.manageSystemUsers}</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center space-x-3">
-                    {/* Language Selector */}
-                    <div className="flex items-center space-x-2">
-                      <Globe className="w-4 h-4 text-gray-500" />
-                      <select
-                        value={language}
-                        onChange={(e) => changeLanguage(e.target.value)}
-                        className="text-sm border border-gray-300 rounded-md px-2 py-1 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                      >
-                        <option value="en">English</option>
-                        <option value="bn">বাংলা</option>
-                        <option value="hi">हिन्दी</option>
-                      </select>
-                    </div>
-                    
-                    {/* Sync Button */}
-                    <button
-                      onClick={handleSync}
-                      disabled={isSyncing}
-                      className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                        isSyncing
-                          ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
-                          : 'bg-purple-100 text-purple-700 hover:bg-purple-200'
-                      }`}
-                    >
-                      <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
-                      <span>{isSyncing ? t.syncing : t.sync}</span>
-                    </button>
-                    
-                    {/* Online Status */}
-                    <div className="flex items-center space-x-2">
-                      {isOnline ? (
-                        <Wifi className="w-4 h-4 text-green-500" />
-                      ) : (
-                        <WifiOff className="w-4 h-4 text-red-500" />
-                      )}
-                      <span className="text-sm text-gray-600">
-                        {isOnline ? t.online : t.offline}
-                      </span>
-                    </div>
-                    
-                    {/* Save Button */}
-                    <button
-                      onClick={handleSaveSecurity}
-                      className="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 transition-colors flex items-center gap-2"
-                    >
-                      <Lock className="h-4 w-4" />
-                      Save Security
-                    </button>
-                  </div>
-                </div>
-              </div>
 
               {/* Security Management Content */}
               <div className="space-y-6">
@@ -268,7 +278,7 @@ const SecurityManagement = () => {
                           <Shield className="h-6 w-6 text-green-600" />
                         </div>
                         <div className="ml-3">
-                          <p className="text-sm font-medium text-gray-500">Security Score</p>
+                          <p className="text-sm font-medium text-gray-500">{t.securityScore}</p>
                           <p className="text-2xl font-semibold text-gray-900">95%</p>
                         </div>
                       </div>
@@ -282,7 +292,7 @@ const SecurityManagement = () => {
                           <Key className="h-6 w-6 text-blue-600" />
                         </div>
                         <div className="ml-3">
-                          <p className="text-sm font-medium text-gray-500">Active Sessions</p>
+                          <p className="text-sm font-medium text-gray-500">{t.activeSessions}</p>
                           <p className="text-2xl font-semibold text-gray-900">12</p>
                         </div>
                       </div>
@@ -296,7 +306,7 @@ const SecurityManagement = () => {
                           <AlertTriangle className="h-6 w-6 text-orange-600" />
                         </div>
                         <div className="ml-3">
-                          <p className="text-sm font-medium text-gray-500">Security Alerts</p>
+                          <p className="text-sm font-medium text-gray-500">{t.securityAlerts}</p>
                           <p className="text-2xl font-semibold text-gray-900">3</p>
                         </div>
                       </div>
@@ -308,7 +318,7 @@ const SecurityManagement = () => {
                 <div className="bg-white shadow rounded-lg">
                   <div className="px-4 py-5 sm:p-6">
                     <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
-                      Authentication Settings
+                      {t.authenticationSettings}
                     </h3>
                     <div className="space-y-4">
                       <div className="flex items-center">
@@ -319,27 +329,27 @@ const SecurityManagement = () => {
                           className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
                         />
                         <label className="ml-2 block text-sm text-gray-900">
-                          Two-Factor Authentication
+                          {t.twoFactorAuth}
                         </label>
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700">
-                          Password Policy
+                          {t.passwordPolicy}
                         </label>
                         <select
                           value={securitySettings.passwordPolicy}
                           onChange={(e) => setSecuritySettings({...securitySettings, passwordPolicy: e.target.value})}
                           className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
                         >
-                          <option value="weak">Weak</option>
-                          <option value="medium">Medium</option>
-                          <option value="strong">Strong</option>
-                          <option value="very-strong">Very Strong</option>
+                          <option value="weak">{t.weak}</option>
+                          <option value="medium">{t.medium}</option>
+                          <option value="strong">{t.strong}</option>
+                          <option value="very-strong">{t.veryStrong}</option>
                         </select>
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700">
-                          Session Timeout (minutes)
+                          {t.sessionTimeout} (minutes)
                         </label>
                         <input
                           type="number"
@@ -356,7 +366,7 @@ const SecurityManagement = () => {
                 <div className="bg-white shadow rounded-lg">
                   <div className="px-4 py-5 sm:p-6">
                     <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
-                      Access Control
+                      {t.accessControl}
                     </h3>
                     <div className="space-y-4">
                       <div className="flex items-center">
@@ -367,7 +377,7 @@ const SecurityManagement = () => {
                           className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
                         />
                         <label className="ml-2 block text-sm text-gray-900">
-                          IP Whitelist
+                          {t.ipWhitelist}
                         </label>
                       </div>
                       <div className="flex items-center">
@@ -378,22 +388,22 @@ const SecurityManagement = () => {
                           className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
                         />
                         <label className="ml-2 block text-sm text-gray-900">
-                          Audit Logging
+                          {t.auditLogging}
                         </label>
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700">
-                          Encryption Level
+                          {t.encryptionLevel}
                         </label>
                         <select
                           value={securitySettings.encryptionLevel}
                           onChange={(e) => setSecuritySettings({...securitySettings, encryptionLevel: e.target.value})}
                           className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
                         >
-                          <option value="low">Low</option>
-                          <option value="medium">Medium</option>
-                          <option value="high">High</option>
-                          <option value="maximum">Maximum</option>
+                          <option value="low">{t.low}</option>
+                          <option value="medium">{t.medium}</option>
+                          <option value="high">{t.high}</option>
+                          <option value="maximum">{t.maximum}</option>
                         </select>
                       </div>
                     </div>

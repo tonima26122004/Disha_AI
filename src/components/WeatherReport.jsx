@@ -165,9 +165,9 @@ const WeatherReport = ({ lang = 'en' }) => {
         {selectedPeriod === 'today' && (
           <div className="space-y-6">
             {/* Current Weather */}
-            <div className="grid lg:grid-cols-3 gap-4 sm:gap-6">
+            <div className="grid lg:grid-cols-2 gap-4 sm:gap-6">
               {/* Main Weather Card */}
-              <div className="lg:col-span-2 bg-gradient-to-br from-blue-500 via-blue-600 to-purple-600 rounded-2xl p-4 sm:p-6 lg:p-8 text-white relative overflow-hidden">
+              <div className="bg-gradient-to-br from-blue-500 via-blue-600 to-purple-600 rounded-2xl p-4 sm:p-6 lg:p-8 text-white relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-24 h-24 sm:w-32 sm:h-32 bg-white/10 rounded-full -translate-y-12 translate-x-12 sm:-translate-y-16 sm:translate-x-16"></div>
                 <div className="absolute bottom-0 left-0 w-16 h-16 sm:w-24 sm:h-24 bg-white/5 rounded-full translate-y-8 -translate-x-8 sm:translate-y-12 sm:-translate-x-12"></div>
                 
@@ -196,8 +196,8 @@ const WeatherReport = ({ lang = 'en' }) => {
                 </div>
               </div>
 
-              {/* Weather Metrics */}
-              <div className="grid grid-cols-2 lg:grid-cols-1 gap-3 lg:space-y-4 lg:gap-0">
+              {/* Weather Metrics - 2x2 Grid */}
+              <div className="grid grid-cols-2 gap-3 sm:gap-4">
                 <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-3 sm:p-4 border border-blue-200">
                   <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
                     <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -296,28 +296,28 @@ const WeatherReport = ({ lang = 'en' }) => {
           <div className="space-y-4 sm:space-y-6">
             <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-2xl p-4 sm:p-6 border border-purple-200">
               <h4 className="font-semibold text-gray-900 text-base sm:text-lg mb-4 sm:mb-6">Past 7 Days Weather</h4>
-              <div className="space-y-3 sm:space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                 {weatherData.past7Days.map((day, index) => (
                   <motion.div
                     key={day.date}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.1 }}
-                    className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200 gap-3 sm:gap-4"
+                    className="flex flex-col p-3 sm:p-4 bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200"
                   >
-                    <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
-                      <div className="text-xs sm:text-sm font-medium text-gray-600 bg-gray-100 px-2 sm:px-3 py-1 rounded-lg flex-shrink-0">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="text-xs sm:text-sm font-medium text-gray-600 bg-gray-100 px-2 sm:px-3 py-1 rounded-lg">
                         {new Date(day.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
                       </div>
-                      <div className="text-xl sm:text-2xl flex-shrink-0">
+                      <div className="text-xl sm:text-2xl">
                         {getWeatherIcon(day.condition, 'cloud')}
                       </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="font-medium text-gray-900 text-sm sm:text-base">{day.condition}</div>
-                        <div className="text-xs sm:text-sm text-gray-600">{day.precipitation}mm rain</div>
-                      </div>
                     </div>
-                    <div className="flex items-center gap-3 sm:gap-4 flex-shrink-0">
+                    <div className="flex-1">
+                      <div className="font-medium text-gray-900 text-sm sm:text-base mb-1">{day.condition}</div>
+                      <div className="text-xs sm:text-sm text-gray-600 mb-3">{day.precipitation}mm rain</div>
+                    </div>
+                    <div className="flex items-center justify-between">
                       <div className="text-right">
                         <div className="font-bold text-base sm:text-lg text-gray-900">{day.high}°</div>
                         <div className="text-xs sm:text-sm text-gray-600">{day.low}°</div>
@@ -339,28 +339,28 @@ const WeatherReport = ({ lang = 'en' }) => {
           <div className="space-y-4 sm:space-y-6">
             <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-2xl p-4 sm:p-6 border border-green-200">
               <h4 className="font-semibold text-gray-900 text-base sm:text-lg mb-4 sm:mb-6">7-Day Forecast</h4>
-              <div className="space-y-3 sm:space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                 {weatherData.forecast7Days.map((day, index) => (
                   <motion.div
                     key={day.date}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.1 }}
-                    className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200 gap-3 sm:gap-4"
+                    className="flex flex-col p-3 sm:p-4 bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200"
                   >
-                    <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
-                      <div className="text-xs sm:text-sm font-medium text-gray-600 bg-blue-100 px-2 sm:px-3 py-1 rounded-lg w-16 sm:w-20 text-center flex-shrink-0">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="text-xs sm:text-sm font-medium text-gray-600 bg-blue-100 px-2 sm:px-3 py-1 rounded-lg">
                         {new Date(day.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
                       </div>
-                      <div className="text-xl sm:text-2xl flex-shrink-0">
+                      <div className="text-xl sm:text-2xl">
                         {getWeatherIcon(day.condition, day.icon)}
                       </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="font-medium text-gray-900 text-sm sm:text-base">{day.condition}</div>
-                        <div className="text-xs sm:text-sm text-gray-600">{day.precipitation}% rain chance</div>
-                      </div>
                     </div>
-                    <div className="flex items-center gap-3 sm:gap-4 flex-shrink-0">
+                    <div className="flex-1">
+                      <div className="font-medium text-gray-900 text-sm sm:text-base mb-1">{day.condition}</div>
+                      <div className="text-xs sm:text-sm text-gray-600 mb-3">{day.precipitation}% rain chance</div>
+                    </div>
+                    <div className="flex items-center justify-between">
                       <div className="text-right">
                         <div className="font-bold text-base sm:text-lg text-gray-900">{day.high}°</div>
                         <div className="text-xs sm:text-sm text-gray-600">{day.low}°</div>
