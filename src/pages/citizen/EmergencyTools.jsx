@@ -48,6 +48,7 @@ const EmergencyTools = () => {
   const [showCameraModal, setShowCameraModal] = useState(false);
   const [showImagePreview, setShowImagePreview] = useState(false);
   const [capturedImage, setCapturedImage] = useState(null);
+  const [cameraLoading, setCameraLoading] = useState(false);
 
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResults, setAnalysisResults] = useState(null);
@@ -92,6 +93,13 @@ const EmergencyTools = () => {
     };
   }, []);
 
+  // Handle video element when camera modal opens
+  React.useEffect(() => {
+    if (showCameraModal && videoRef.current) {
+      console.log('Camera modal opened, video element available');
+    }
+  }, [showCameraModal]);
+
   const requestLocation = () => {
     if (!navigator.geolocation) {
       showToast('Geolocation not supported by this browser', 'error');
@@ -125,45 +133,91 @@ const EmergencyTools = () => {
     t.blankets
   ];
 
-  // Camera functions
+  // Camera functions - Simplified approach
   const startCamera = async () => {
     try {
+      console.log('Starting camera...');
+      setCameraLoading(true);
+      setShowCameraModal(true);
+      
+      // Get camera stream
       const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: 'environment' } 
+        video: true 
       });
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        setShowCameraModal(true);
-      }
+      
+      console.log('Camera stream obtained:', stream);
+      
+      // Use a shorter timeout since video element is always present
+      setTimeout(() => {
+        const video = document.getElementById('camera-video-element');
+        if (video) {
+          console.log('Video element found, setting stream...');
+          video.srcObject = stream;
+          video.play().then(() => {
+            console.log('Video playing successfully');
+            setCameraLoading(false);
+            showToast('Camera ready!', 'success');
+          }).catch(err => {
+            console.error('Video play error:', err);
+            setCameraLoading(false);
+            showToast('Camera preview error', 'error');
+          });
+        } else {
+          console.error('Video element not found');
+          showToast('Camera element not ready', 'error');
+          setShowCameraModal(false);
+          setCameraLoading(false);
+        }
+      }, 300);
+      
     } catch (error) {
       console.error('Camera access error:', error);
-      showToast('Camera access denied', 'error');
+      showToast('Camera access denied or not available', 'error');
+      setShowCameraModal(false);
+      setCameraLoading(false);
     }
   };
 
   const capturePhoto = () => {
-    if (videoRef.current && canvasRef.current) {
-      const canvas = canvasRef.current;
-      const video = videoRef.current;
+    const video = document.getElementById('camera-video-element');
+    const canvas = canvasRef.current;
+    
+    if (video && canvas) {
       const context = canvas.getContext('2d');
+      
+      // Ensure video is ready
+      if (video.videoWidth === 0 || video.videoHeight === 0) {
+        showToast('Camera not ready. Please wait a moment.', 'error');
+        return;
+      }
       
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
-      context.drawImage(video, 0, 0);
       
-      const imageData = canvas.toDataURL('image/jpeg');
+      // Flip the image horizontally to match the mirrored preview
+      context.scale(-1, 1);
+      context.drawImage(video, -video.videoWidth, 0);
+      
+      const imageData = canvas.toDataURL('image/jpeg', 0.8);
       setCapturedImage(imageData);
       stopCamera();
       setShowImagePreview(true);
+      showToast('Photo captured successfully!', 'success');
+    } else {
+      showToast('Camera not available', 'error');
     }
   };
 
   const stopCamera = () => {
-    if (videoRef.current && videoRef.current.srcObject) {
-      videoRef.current.srcObject.getTracks().forEach(track => track.stop());
-      setShowCameraModal(false);
+    const video = document.getElementById('camera-video-element');
+    if (video && video.srcObject) {
+      video.srcObject.getTracks().forEach(track => track.stop());
+      video.srcObject = null;
     }
+    setShowCameraModal(false);
+    setCameraLoading(false);
   };
+
 
   const handleFileUpload = (event) => {
     const file = event.target.files[0];
@@ -263,12 +317,18 @@ const EmergencyTools = () => {
 
   // New functions for combined image functionality
   const handleImageAction = (action) => {
+    console.log('handleImageAction called with:', action);
     if (action === 'camera') {
-      startCamera();
+      setShowImageModal(false); // Close the image selection modal first
+      console.log('Image modal closed, starting camera...');
+      // Add a small delay to ensure smooth transition
+      setTimeout(() => {
+        startCamera();
+      }, 100);
     } else if (action === 'upload') {
       fileInputRef.current?.click();
+      setShowImageModal(false);
     }
-    setShowImageModal(false);
   };
 
   // Image preview functions
@@ -863,14 +923,14 @@ const EmergencyTools = () => {
 
       {/* Camera Modal */}
       {showCameraModal && (
-        <div className="fixed inset-0 z-[100] bg-black bg-opacity-90 flex items-center justify-center">
-          <div className="bg-white rounded-2xl p-6 max-w-4xl w-full mx-4">
+        <div className="fixed inset-0 z-[100] bg-black bg-opacity-95 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl p-6 max-w-4xl w-full max-h-[90vh] overflow-hidden shadow-2xl">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
                   <Camera className="w-5 h-5 text-white" />
                 </div>
-                <h3 className="text-xl font-bold text-gray-900">{t.takePhoto}</h3>
+                <h3 className="text-xl font-bold text-gray-900">{t.takePhoto || 'Take Photo'}</h3>
               </div>
               <button
                 onClick={stopCamera}
@@ -881,34 +941,68 @@ const EmergencyTools = () => {
             </div>
             
             <div className="space-y-6">
-              <div className="bg-gray-100 rounded-xl p-4">
-              <video
-                ref={videoRef}
-                autoPlay
-                playsInline
-                  className="w-full h-80 bg-gray-200 rounded-lg object-cover"
+              {/* Camera Preview Container */}
+              <div className="relative bg-gray-900 rounded-xl overflow-hidden shadow-2xl min-h-[400px]">
+                {/* Always render video element */}
+                <video
+                  ref={videoRef}
+                  id="camera-video-element"
+                  autoPlay
+                  playsInline
+                  muted
+                  controls={false}
+                  className="w-full h-80 sm:h-96 object-cover"
+                  style={{ transform: 'scaleX(-1)' }}
                 />
+                
+                {/* Loading overlay */}
+                {cameraLoading && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-gray-800 bg-opacity-90">
+                    <div className="text-center text-white">
+                      <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />
+                      <p className="text-lg font-medium">Starting Camera...</p>
+                      <p className="text-sm text-gray-300 mt-2">Please allow camera access</p>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Camera overlay indicators */}
+                <div className="absolute top-4 left-4 right-4 flex justify-between items-start">
+                  <div className="bg-black bg-opacity-50 text-white px-3 py-1 rounded-full text-sm">
+                    📷 Live Camera
+                  </div>
+                  <div className="bg-red-500 w-3 h-3 rounded-full animate-pulse"></div>
+                </div>
+                
+                {/* Focus frame overlay */}
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <div className="border-2 border-white border-dashed rounded-lg w-64 h-48 opacity-50"></div>
+                </div>
               </div>
               
               <div className="text-center">
-                <p className="text-sm text-gray-600 mb-4">
-                  Position your emergency items in the camera view and tap capture
+                <p className="text-sm text-gray-600 mb-2">
+                  📦 Position your emergency items in the camera view
+                </p>
+                <p className="text-xs text-gray-500">
+                  Make sure items are well-lit and clearly visible
                 </p>
               </div>
               
               <div className="flex gap-4">
                 <button
                   onClick={capturePhoto}
-                  className="flex-1 flex items-center justify-center gap-3 px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+                  disabled={cameraLoading}
+                  className="flex-1 flex items-center justify-center gap-3 px-6 py-4 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Camera className="w-5 h-5" />
-                  <span className="font-semibold">{t.capture}</span>
+                  <span className="font-semibold text-lg">{t.capture || 'Capture Photo'}</span>
                 </button>
                 <button
                   onClick={stopCamera}
-                  className="flex-1 px-6 py-3 bg-gray-600 text-white rounded-xl hover:bg-gray-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+                  className="flex-1 px-6 py-4 bg-gray-600 text-white rounded-xl hover:bg-gray-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1 active:scale-95"
                 >
-                  <span className="font-semibold">{t.cancel}</span>
+                  <span className="font-semibold text-lg">{t.cancel || 'Cancel'}</span>
                 </button>
               </div>
             </div>
